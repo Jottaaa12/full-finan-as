@@ -167,8 +167,17 @@
                     </div>
                 </section>
                 
-                <!-- Outras Seções (Contas, Cartões, etc.) -->
-                <section id="accounts-page" class="page hidden"><h2>Gestão de Contas</h2><!-- Conteúdo aqui --></section>
+                <!-- Seção de Contas -->
+                <section id="accounts-page" class="page hidden">
+                    <h2>Gestão de Contas</h2>
+                    <div class="actions-bar">
+                        <button id="add-account-btn" class="btn-primary"><i class="fas fa-plus"></i> Nova Conta</button>
+                    </div>
+                    <div id="accounts-list" class="accounts-grid">
+                        <!-- Cards de conta serão inseridos aqui via JS -->
+                    </div>
+                </section>
+
                 <section id="cards-page" class="page hidden"><h2>Controle de Cartões de Crédito</h2><!-- Conteúdo aqui --></section>
                 <section id="budgets-page" class="page hidden"><h2>Orçamentos Mensais</h2><!-- Conteúdo aqui --></section>
                 <section id="goals-page" class="page hidden"><h2>Meus Objetivos</h2><!-- Conteúdo aqui --></section>
@@ -182,7 +191,7 @@
     <div id="transaction-modal" class="modal-container hidden">
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
-            <h3 id="modal-title">Nova Transação</h3>
+            <h3 id="transaction-modal-title">Nova Transação</h3>
             <form id="transaction-form">
                 <input type="hidden" id="transaction-id">
                 <div class="form-group">
@@ -199,7 +208,7 @@
                 </div>
                 <div class="form-group">
                     <label for="transaction-amount">Valor</label>
-                    <input type="number" step="0.01" id="transaction-amount" required>
+                    <input type="number" step="0.01" id="transaction-amount" placeholder="R$ 0,00" required>
                 </div>
                 <div class="form-group">
                     <label for="transaction-date">Data</label>
@@ -208,18 +217,57 @@
                  <div class="form-group">
                     <label for="transaction-account">Conta</label>
                     <select id="transaction-account" required>
+                        <option value="">Selecione uma conta</option>
                         <!-- Opções de conta carregadas via JS -->
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="transaction-category">Categoria</label>
-                    <input type="text" id="transaction-category" required>
+                    <input type="text" id="transaction-category" list="common-categories" placeholder="Ex: Alimentação" required>
+                    <datalist id="common-categories">
+                        <option value="Alimentação"></option>
+                        <option value="Transporte"></option>
+                        <option value="Moradia"></option>
+                        <option value="Lazer"></option>
+                        <option value="Saúde"></option>
+                        <option value="Salário"></option>
+                    </datalist>
                 </div>
                 <div class="form-group form-group-checkbox">
                     <input type="checkbox" id="transaction-paid">
                     <label for="transaction-paid">Pago/Recebido</label>
                 </div>
                 <button type="submit" class="btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Conta -->
+    <div id="account-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="account-modal-title">Nova Conta</h3>
+            <form id="account-form">
+                <input type="hidden" id="account-id">
+                <div class="form-group">
+                    <label for="account-name">Nome da Conta</label>
+                    <input type="text" id="account-name" placeholder="Ex: Carteira, Conta Bradesco" required>
+                </div>
+                <div class="form-group">
+                    <label for="account-type">Tipo de Conta</label>
+                    <select id="account-type" required>
+                        <option value="conta_corrente">Conta Corrente</option>
+                        <option value="poupanca">Poupança</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="investimento">Investimento</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="account-initial-balance">Saldo Inicial</label>
+                    <input type="number" step="0.01" id="account-initial-balance" placeholder="R$ 0,00" required>
+                </div>
+                <button type="submit" class="btn-primary">Salvar Conta</button>
             </form>
         </div>
     </div>
