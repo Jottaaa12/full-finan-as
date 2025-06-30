@@ -14,6 +14,7 @@
     --secondary-color: #10b981; /* Verde para receitas */
     --danger-color: #ef4444; /* Vermelho para despesas */
     --warning-color: #f59e0b; /* Amarelo para alertas */
+    --info-color: #3b82f6; /* Azul para informações */
     --bg-color: #f8fafc; /* Fundo principal claro */
     --bg-light: #ffffff; /* Fundo de cards e modais */
     --text-color: #334155; /* Texto principal */
@@ -443,7 +444,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.5rem; /* Reduzido */
+    margin-bottom: 0.5rem;
 }
 
 .account-card-header h3 {
@@ -459,7 +460,7 @@ a:hover {
 .account-card-balance {
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 1rem; /* Aumentado */
+    margin-bottom: 1rem;
 }
 
 .account-card-type {
@@ -471,6 +472,78 @@ a:hover {
     margin-top: auto;
     display: flex;
     gap: 0.5rem;
+}
+
+/* --- Seção de Cartões de Crédito --- */
+.credit-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.credit-card-bill {
+    background-color: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+}
+
+.credit-card-bill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.credit-card-bill-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.credit-card-bill-header .icon {
+    font-size: 1.8rem;
+    color: var(--info-color);
+}
+
+.bill-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.bill-details div {
+    text-align: center;
+}
+
+.bill-details h4 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.bill-details p {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.bill-details .total {
+    color: var(--danger-color);
+}
+
+.bill-transactions-list {
+    list-style: none;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.bill-transactions-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
 }
 
 
