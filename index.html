@@ -178,7 +178,17 @@
                     </div>
                 </section>
 
-                <section id="cards-page" class="page hidden"><h2>Controle de Cartões de Crédito</h2><!-- Conteúdo aqui --></section>
+                <!-- Seção de Cartões de Crédito -->
+                <section id="cards-page" class="page hidden">
+                    <h2>Controle de Cartões de Crédito</h2>
+                    <div class="actions-bar">
+                        <p>Gerencie as faturas dos seus cartões de crédito.</p>
+                    </div>
+                    <div id="credit-cards-list" class="credit-cards-grid">
+                        <!-- Faturas dos cartões serão inseridas aqui via JS -->
+                    </div>
+                </section>
+
                 <section id="budgets-page" class="page hidden"><h2>Orçamentos Mensais</h2><!-- Conteúdo aqui --></section>
                 <section id="goals-page" class="page hidden"><h2>Meus Objetivos</h2><!-- Conteúdo aqui --></section>
                 <section id="reports-page" class="page hidden"><h2>Relatórios e Gráficos</h2><!-- Conteúdo aqui --></section>
@@ -242,7 +252,7 @@
         </div>
     </div>
 
-    <!-- Modal para Adicionar/Editar Conta -->
+    <!-- Modal para Adicionar/Editar Conta/Cartão -->
     <div id="account-modal" class="modal-container hidden">
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
@@ -250,24 +260,36 @@
             <form id="account-form">
                 <input type="hidden" id="account-id">
                 <div class="form-group">
-                    <label for="account-name">Nome da Conta</label>
-                    <input type="text" id="account-name" placeholder="Ex: Carteira, Conta Bradesco" required>
+                    <label for="account-name">Nome da Conta ou Cartão</label>
+                    <input type="text" id="account-name" placeholder="Ex: Carteira, Cartão Nubank" required>
                 </div>
                 <div class="form-group">
-                    <label for="account-type">Tipo de Conta</label>
+                    <label for="account-type">Tipo</label>
                     <select id="account-type" required>
                         <option value="conta_corrente">Conta Corrente</option>
                         <option value="poupanca">Poupança</option>
                         <option value="dinheiro">Dinheiro</option>
                         <option value="investimento">Investimento</option>
+                        <option value="cartao_credito">Cartão de Crédito</option>
                         <option value="outros">Outros</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="initial-balance-group">
                     <label for="account-initial-balance">Saldo Inicial</label>
                     <input type="number" step="0.01" id="account-initial-balance" placeholder="R$ 0,00" required>
                 </div>
-                <button type="submit" class="btn-primary">Salvar Conta</button>
+                <!-- Campos específicos para cartão de crédito -->
+                <div id="credit-card-fields" class="hidden">
+                    <div class="form-group">
+                        <label for="card-closing-day">Dia do Fechamento da Fatura</label>
+                        <input type="number" id="card-closing-day" min="1" max="31" placeholder="Ex: 20">
+                    </div>
+                    <div class="form-group">
+                        <label for="card-due-day">Dia do Vencimento da Fatura</label>
+                        <input type="number" id="card-due-day" min="1" max="31" placeholder="Ex: 28">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Salvar</button>
             </form>
         </div>
     </div>
