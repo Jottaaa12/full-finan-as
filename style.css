@@ -282,6 +282,48 @@ a:hover {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- Componentes Genéricos --- */
+.actions-bar {
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-secondary {
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+.btn-secondary:hover {
+    background-color: var(--bg-color);
+}
+
+.btn-danger {
+    background-color: transparent;
+    color: var(--danger-color);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
 /* --- Componentes do Dashboard --- */
 .summary-cards {
     display: grid;
@@ -356,25 +398,6 @@ a:hover {
 }
 
 /* --- Tabela de Transações --- */
-.actions-bar {
-    margin-bottom: 1.5rem;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.7rem 1.2rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-}
-.btn-primary:hover {
-    background-color: var(--primary-color-dark);
-}
-
 .table-container {
     background-color: var(--bg-light);
     border-radius: 12px;
@@ -399,6 +422,57 @@ a:hover {
     color: var(--text-light);
     font-weight: 600;
 }
+
+/* --- Seção de Contas --- */
+.accounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.account-card {
+    background-color: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.account-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.account-card-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.account-card-header .icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.account-card-balance {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.account-card-type {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+}
+
+.account-card-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
 
 /* --- Modal --- */
 .modal-container {
@@ -436,7 +510,7 @@ a:hover {
     color: var(--text-light);
 }
 
-#modal-title {
+#transaction-modal-title, #account-modal-title {
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
@@ -458,6 +532,8 @@ a:hover {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 1rem;
+    background-color: var(--bg-light);
+    color: var(--text-color);
 }
 
 .form-group-checkbox {
