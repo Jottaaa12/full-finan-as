@@ -443,7 +443,7 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem; /* Reduzido */
 }
 
 .account-card-header h3 {
@@ -459,7 +459,7 @@ a:hover {
 .account-card-balance {
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 0.25rem;
+    margin-bottom: 1rem; /* Aumentado */
 }
 
 .account-card-type {
