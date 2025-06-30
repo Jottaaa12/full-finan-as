@@ -46,18 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const transactionAccountSelect = document.getElementById('transaction-account');
     const transactionsTableBody = document.querySelector('#transactions-table tbody');
 
-    // Contas
+    // Contas e Cartões
     const addAccountBtn = document.getElementById('add-account-btn');
     const accountModal = document.getElementById('account-modal');
     const accountForm = document.getElementById('account-form');
     const accountModalTitle = document.getElementById('account-modal-title');
     const accountsList = document.getElementById('accounts-list');
+    const accountTypeSelect = document.getElementById('account-type');
+    const creditCardFields = document.getElementById('credit-card-fields');
+    const initialBalanceGroup = document.getElementById('initial-balance-group');
+    const creditCardsList = document.getElementById('credit-cards-list');
+
 
     // --- ESTADO DA APLICAÇÃO (CACHE LOCAL) ---
     let currentUser = null;
     let mainChart = null;
     let userAccounts = []; 
-    let userTransactions = []; // NOVO: Cache local para todas as transações
+    let userTransactions = [];
 
     // --- INICIALIZAÇÃO ---
 
@@ -85,13 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
         authContainer.classList.add('hidden');
         
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if (userDoc.exists) {
-            userNameDisplay.textContent = userDoc.data().name;
-        } else {
-            userNameDisplay.textContent = currentUser.email;
-        }
+        userNameDisplay.textContent = userDoc.exists ? userDoc.data().name : currentUser.email;
         
-        // NOVO: Carrega todos os dados essenciais de uma vez
         await fetchAllData();
         navigateTo('dashboard');
         
@@ -99,46 +99,34 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer.classList.remove('hidden');
     }
     
-    // NOVO: Função central para buscar e sincronizar todos os dados
     async function fetchAllData() {
         if (!currentUser) return;
         
-        // Busca contas
         const accountsSnapshot = await db.collection('accounts').where('userId', '==', currentUser.uid).get();
         userAccounts = accountsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Busca transações
         const transactionsSnapshot = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
         userTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Calcula os saldos
         calculateAllBalances();
     }
     
-    // NOVO: Função para calcular o saldo de todas as contas
     function calculateAllBalances() {
         userAccounts.forEach(account => {
-            // Começa com o saldo inicial
-            let currentBalance = account.initialBalance;
-
-            // Filtra as transações APENAS para esta conta
-            const relevantTransactions = userTransactions.filter(t => t.accountId === account.id);
-
-            // Soma receitas e subtrai despesas
-            relevantTransactions.forEach(t => {
-                if (t.type === 'receita') {
-                    currentBalance += t.amount;
-                } else if (t.type === 'despesa') {
-                    currentBalance -= t.amount;
-                }
-                // Lógica para transferência seria adicionada aqui
-            });
-            
-            // Armazena o saldo calculado no objeto da conta em cache
-            account.currentBalance = currentBalance;
+            if (account.type === 'cartao_credito') {
+                // Saldo de cartão de crédito é a fatura, não o limite. Não calculamos aqui.
+                account.currentBalance = 0; // Representa o impacto no patrimônio, que é nulo até pagar a fatura.
+            } else {
+                let currentBalance = account.initialBalance;
+                const relevantTransactions = userTransactions.filter(t => t.accountId === account.id);
+                relevantTransactions.forEach(t => {
+                    if (t.type === 'receita') currentBalance += t.amount;
+                    else if (t.type === 'despesa') currentBalance -= t.amount;
+                });
+                account.currentBalance = currentBalance;
+            }
         });
     }
-
 
     // --- LÓGICA DE AUTENTICAÇÃO (sem alterações) ---
     showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); toggleForms(true); });
@@ -196,30 +184,39 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'dashboard': loadDashboardData(); break;
             case 'transactions': loadTransactionsData(); break;
             case 'accounts': loadAccountsData(); break;
+            case 'cards': loadCardsData(); break; // NOVO
         }
     }
     
-    // --- LÓGICA DAS CONTAS ---
+    // --- LÓGICA DE CONTAS E CARTÕES ---
+    
+    // NOVO: Mostra/esconde campos de cartão de crédito no modal
+    accountTypeSelect.addEventListener('change', () => {
+        const isCreditCard = accountTypeSelect.value === 'cartao_credito';
+        creditCardFields.classList.toggle('hidden', !isCreditCard);
+        initialBalanceGroup.classList.toggle('hidden', isCreditCard);
+        // Saldo inicial não é obrigatório para cartão
+        document.getElementById('account-initial-balance').required = !isCreditCard;
+        document.getElementById('card-closing-day').required = isCreditCard;
+        document.getElementById('card-due-day').required = isCreditCard;
+    });
+
     function loadAccountsData() {
         if (!currentUser) return;
         accountsList.innerHTML = '';
+        const regularAccounts = userAccounts.filter(acc => acc.type !== 'cartao_credito');
         
-        userAccounts.forEach(account => {
+        regularAccounts.forEach(account => {
             const card = document.createElement('div');
             card.className = 'account-card';
-            // NOVO: Exibe o `currentBalance` calculado em vez do `initialBalance`
             card.innerHTML = `
-                <div class="account-card-header">
-                    <h3>${account.name}</h3>
-                    <i class="fas fa-wallet icon"></i>
-                </div>
+                <div class="account-card-header"><h3>${account.name}</h3><i class="fas fa-wallet icon"></i></div>
                 <p class="account-card-balance">${formatCurrency(account.currentBalance)}</p>
                 <p class="account-card-type">${account.type.replace('_', ' ')}</p>
                 <div class="account-card-actions">
                     <button class="btn-secondary edit-account-btn" data-id="${account.id}">Editar</button>
                     <button class="btn-danger delete-account-btn" data-id="${account.id}">Excluir</button>
-                </div>
-            `;
+                </div>`;
             accountsList.appendChild(card);
         });
     }
@@ -228,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         accountForm.reset();
         accountModalTitle.textContent = 'Nova Conta';
         accountForm['account-id'].value = '';
+        accountTypeSelect.dispatchEvent(new Event('change')); // Garante estado inicial correto dos campos
         openModal(accountModal);
     });
 
@@ -241,46 +239,163 @@ document.addEventListener('DOMContentLoaded', () => {
                 accountForm['account-id'].value = account.id;
                 accountForm['account-name'].value = account.name;
                 accountForm['account-type'].value = account.type;
-                accountForm['account-initial-balance'].value = account.initialBalance;
+                if(account.type === 'cartao_credito') {
+                    accountForm['card-closing-day'].value = account.closingDay;
+                    accountForm['card-due-day'].value = account.dueDate;
+                } else {
+                    accountForm['account-initial-balance'].value = account.initialBalance;
+                }
+                accountTypeSelect.dispatchEvent(new Event('change'));
                 openModal(accountModal);
             }
         }
         if (e.target.classList.contains('delete-account-btn')) {
-            if (confirm('Tem certeza que deseja excluir esta conta? As transações não serão excluídas, mas ficarão sem uma conta associada.')) {
-                deleteAccount(accountId);
-            }
+            if (confirm('Tem certeza que deseja excluir?')) { deleteAccount(accountId); }
         }
     });
 
     accountForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const accountId = accountForm['account-id'].value;
+        const type = accountForm['account-type'].value;
         const data = {
             userId: currentUser.uid,
             name: accountForm['account-name'].value,
-            type: accountForm['account-type'].value,
-            initialBalance: parseFloat(accountForm['account-initial-balance'].value)
+            type: type
         };
+
+        if (type === 'cartao_credito') {
+            data.closingDay = parseInt(accountForm['card-closing-day'].value);
+            data.dueDate = parseInt(accountForm['card-due-day'].value);
+            data.initialBalance = 0; // Cartão não tem saldo inicial
+        } else {
+            data.initialBalance = parseFloat(accountForm['account-initial-balance'].value);
+        }
+
         try {
             if (accountId) {
                 await db.collection('accounts').doc(accountId).update(data);
             } else {
                 await db.collection('accounts').add(data);
             }
-            await fetchAllData(); // NOVO: Re-sincroniza tudo
-            loadAccountsData();
+            await fetchAllData();
+            loadPageData(document.querySelector('.page.active').id.replace('-page', ''));
             closeModal(accountModal);
-        } catch (error) { console.error("Erro ao salvar conta:", error); alert("Não foi possível salvar a conta."); }
+        } catch (error) { console.error("Erro ao salvar:", error); alert("Não foi possível salvar."); }
     });
     
     async function deleteAccount(id) {
         try {
             await db.collection('accounts').doc(id).delete();
-            await fetchAllData(); // NOVO: Re-sincroniza tudo
-            loadAccountsData();
-        } catch (error) { console.error("Erro ao excluir conta:", error); alert("Não foi possível excluir a conta."); }
+            await fetchAllData();
+            loadPageData(document.querySelector('.page.active').id.replace('-page', ''));
+        } catch (error) { console.error("Erro ao excluir:", error); alert("Não foi possível excluir."); }
+    }
+    
+    // --- LÓGICA DA PÁGINA DE CARTÕES ---
+    
+    // NOVO: Função para carregar e exibir as faturas dos cartões
+    function loadCardsData() {
+        creditCardsList.innerHTML = '';
+        const creditCards = userAccounts.filter(acc => acc.type === 'cartao_credito');
+
+        creditCards.forEach(card => {
+            const billCycle = getBillingCycle(card);
+            const billTransactions = userTransactions.filter(t => 
+                t.accountId === card.id &&
+                t.date.toDate() >= billCycle.start &&
+                t.date.toDate() <= billCycle.end
+            );
+            const billTotal = billTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+            const cardElement = document.createElement('div');
+            cardElement.className = 'credit-card-bill';
+            cardElement.innerHTML = `
+                <div class="credit-card-bill-header">
+                    <h3>${card.name}</h3>
+                    <i class="fas fa-credit-card icon"></i>
+                </div>
+                <div class="bill-details">
+                    <div>
+                        <h4>Fatura Atual</h4>
+                        <p class="total">${formatCurrency(billTotal)}</p>
+                    </div>
+                    <div>
+                        <h4>Vencimento</h4>
+                        <p>${billCycle.due.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'})}</p>
+                    </div>
+                </div>
+                <ul class="bill-transactions-list">
+                    ${billTransactions.map(t => `<li><span>${t.description}</span><strong>${formatCurrency(t.amount)}</strong></li>`).join('')}
+                </ul>
+                <div class="account-card-actions" style="margin-top: 1rem;">
+                    <button class="btn-primary" disabled>Pagar Fatura</button>
+                </div>
+            `;
+            creditCardsList.appendChild(cardElement);
+        });
     }
 
+    // NOVO: Função para determinar o ciclo da fatura atual de um cartão
+    function getBillingCycle(card) {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth(); // 0-11
+        const closingDay = card.closingDay;
+        const dueDay = card.dueDate;
+
+        let start, end, due;
+
+        if (today.getDate() > closingDay) {
+            // A fatura atual já começou neste mês e fecha no próximo
+            start = new Date(currentYear, currentMonth, closingDay + 1);
+            end = new Date(currentYear, currentMonth + 1, closingDay);
+            due = new Date(currentYear, currentMonth + 1, dueDay);
+        } else {
+            // A fatura atual começou no mês passado e fecha neste mês
+            start = new Date(currentYear, currentMonth - 1, closingDay + 1);
+            end = new Date(currentYear, currentMonth, closingDay);
+            due = new Date(currentYear, currentMonth, dueDay);
+        }
+        return { start, end, due };
+    }
+
+
+    // --- LÓGICA DO DASHBOARD ---
+    function loadDashboardData() {
+        if (!currentUser) return;
+        const totalBalance = userAccounts
+            .filter(acc => acc.type !== 'cartao_credito')
+            .reduce((sum, acc) => sum + acc.currentBalance, 0);
+        totalBalanceEl.textContent = formatCurrency(totalBalance);
+        
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        let monthlyIncome = 0, monthlyExpenses = 0;
+        userTransactions.forEach(t => {
+            const transactionDate = t.date.toDate();
+            if (transactionDate >= startOfMonth) {
+                if (t.type === 'receita') monthlyIncome += t.amount;
+                else if (t.type === 'despesa') monthlyExpenses += t.amount;
+            }
+        });
+        monthlyIncomeEl.textContent = formatCurrency(monthlyIncome);
+        monthlyExpensesEl.textContent = formatCurrency(monthlyExpenses);
+        monthlySavingsEl.textContent = formatCurrency(monthlyIncome - monthlyExpenses);
+        
+        recentTransactionsList.innerHTML = '';
+        const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
+        sortedTransactions.slice(0, 5).forEach(t => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span><i class="fas ${t.type === 'receita' ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};"></i> ${t.description}</span><strong>${formatCurrency(t.amount)}</strong>`;
+            recentTransactionsList.appendChild(li);
+        });
+        renderMainChart();
+    }
+    
+    async function renderMainChart() { /* Lógica do gráfico permanece a mesma */ }
+
+    // --- LÓGICA DE TRANSAÇÕES ---
     function populateAccountOptions() {
         transactionAccountSelect.innerHTML = '<option value="">Selecione uma conta</option>';
         userAccounts.forEach(account => {
@@ -291,46 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DO DASHBOARD ---
-    function loadDashboardData() {
-        if (!currentUser) return;
-        
-        // NOVO: Calcula o saldo total somando os saldos atuais de todas as contas
-        const totalBalance = userAccounts.reduce((sum, acc) => sum + acc.currentBalance, 0);
-        totalBalanceEl.textContent = formatCurrency(totalBalance);
-        
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        let monthlyIncome = 0, monthlyExpenses = 0;
-        // NOVO: Usa o cache local de transações para performance
-        userTransactions.forEach(t => {
-            const transactionDate = t.date.toDate();
-            if (transactionDate >= startOfMonth) {
-                if (t.type === 'receita') monthlyIncome += t.amount;
-                else if (t.type === 'despesa') monthlyExpenses += t.amount;
-            }
-        });
-
-        monthlyIncomeEl.textContent = formatCurrency(monthlyIncome);
-        monthlyExpensesEl.textContent = formatCurrency(monthlyExpenses);
-        monthlySavingsEl.textContent = formatCurrency(monthlyIncome - monthlyExpenses);
-        
-        recentTransactionsList.innerHTML = '';
-        // NOVO: Pega as 5 mais recentes do cache local já ordenado
-        const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
-        sortedTransactions.slice(0, 5).forEach(t => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span><i class="fas ${t.type === 'receita' ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};"></i> ${t.description}</span><strong>${formatCurrency(t.amount)}</strong>`;
-            recentTransactionsList.appendChild(li);
-        });
-
-        renderMainChart();
-    }
-    
-    async function renderMainChart() { /* Lógica do gráfico permanece a mesma por enquanto */ }
-
-    // --- LÓGICA DE TRANSAÇÕES ---
     addTransactionBtn.addEventListener('click', () => {
         transactionForm.reset();
         transactionModalTitle.textContent = 'Nova Transação';
@@ -350,44 +425,4 @@ document.addEventListener('DOMContentLoaded', () => {
             isPaid: transactionForm['transaction-paid'].checked
         };
         try {
-            if (transactionId) {
-                await db.collection('transactions').doc(transactionId).update(data);
-            } else {
-                await db.collection('transactions').add(data);
-            }
-            await fetchAllData(); // NOVO: Re-sincroniza tudo após a transação
-            closeModal(transactionModal);
-            loadPageData(document.querySelector('.page.active').id.replace('-page', '')); // Recarrega a página atual
-        } catch (error) { console.error("Erro ao salvar transação: ", error); alert("Não foi possível salvar a transação."); }
-    });
-
-    function loadTransactionsData() {
-        if (!currentUser) return;
-        transactionsTableBody.innerHTML = '';
-        const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
-        
-        sortedTransactions.forEach(t => {
-            const accountName = userAccounts.find(acc => acc.id === t.accountId)?.name || 'N/A';
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${t.date.toDate().toLocaleDateString('pt-BR')}</td> <td>${t.description}</td> <td>${t.category}</td>
-                <td>${accountName}</td> <td style="color: ${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};">${formatCurrency(t.amount)}</td>
-                <td>${t.isPaid ? 'Pago' : 'Pendente'}</td> <td><!-- Ações --></td>
-            `;
-            transactionsTableBody.appendChild(tr);
-        });
-    }
-
-    // --- FUNÇÕES UTILITÁRIAS ---
-    function openModal(modalElement) { modalElement.classList.remove('hidden'); }
-    function closeModal(modalElement) { modalElement.classList.add('hidden'); }
-    document.querySelectorAll('.modal-container').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal || e.target.classList.contains('modal-close-btn')) { closeModal(modal); }
-        });
-    });
-    function formatCurrency(value) {
-        if (typeof value !== 'number') value = 0;
-        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-});
+            if (t
