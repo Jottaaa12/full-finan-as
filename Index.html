@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Finanças - Controle Financeiro Completo</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- jsPDF & html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <!-- Tela de Carregamento -->
+    <div id="loader" class="loader-container">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Container da Aplicação -->
+    <div id="app" class="app-container hidden">
+
+        <!-- Tela de Login / Registro -->
+        <div id="auth-container" class="auth-container">
+            <div class="auth-box">
+                <h1 class="auth-title">❤ Full Finanças</h1>
+                <p class="auth-subtitle">Controle suas finanças, conquiste seus sonhos.</p>
+                
+                <!-- Formulário de Login -->
+                <form id="login-form" class="auth-form">
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Senha" required>
+                    <button type="submit">Entrar</button>
+                    <p class="auth-toggle">Não tem uma conta? <a href="#" id="show-register">Registre-se</a></p>
+                </form>
+
+                <!-- Formulário de Registro -->
+                <form id="register-form" class="auth-form hidden">
+                    <input type="text" id="register-name" placeholder="Nome Completo" required>
+                    <input type="email" id="register-email" placeholder="Email" required>
+                    <input type="password" id="register-password" placeholder="Senha (mín. 6 caracteres)" required>
+                    <button type="submit">Criar Conta</button>
+                    <p class="auth-toggle">Já tem uma conta? <a href="#" id="show-login">Faça Login</a></p>
+                </form>
+                <p id="auth-error" class="error-message"></p>
+            </div>
+             <footer class="auth-footer">Criado by Jotta💜</footer>
+        </div>
+
+        <!-- Conteúdo Principal (Pós-login) -->
+        <div id="main-content" class="main-content hidden">
+            <!-- Menu Lateral -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title">Full Finanças</h2>
+                </div>
+                <ul class="sidebar-menu">
+                    <li><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                    <li><a href="#" class="nav-link" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transações</a></li>
+                    <li><a href="#" class="nav-link" data-page="accounts"><i class="fas fa-wallet"></i> Contas</a></li>
+                    <li><a href="#" class="nav-link" data-page="cards"><i class="fas fa-credit-card"></i> Cartões</a></li>
+                    <li><a href="#" class="nav-link" data-page="budgets"><i class="fas fa-bullseye"></i> Orçamentos</a></li>
+                    <li><a href="#" class="nav-link" data-page="goals"><i class="fas fa-flag-checkered"></i> Objetivos</a></li>
+                    <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
+                    <li><a href="#" class="nav-link" data-page="tools"><i class="fas fa-tools"></i> Ferramentas</a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <div id="user-info" class="user-info">
+                        <span id="user-name-display"></span>
+                    </div>
+                    <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
+                </div>
+            </nav>
+
+            <!-- Área de Conteúdo da Página -->
+            <main class="page-content">
+                <header class="page-header">
+                     <h1>❤ Full finanças: Controle Total das Suas Finanças em um Só Lugar!</h1>
+                     <p>Criado by Jotta💜</p>
+                </header>
+                
+                <!-- Seção do Dashboard -->
+                <section id="dashboard-page" class="page active">
+                    <!-- Cards de Resumo -->
+                    <div class="summary-cards">
+                        <div class="card"><div class="card-icon"><i class="fas fa-balance-scale"></i></div><div class="card-content"><h3>Saldo Total</h3><p id="total-balance">R$ 0,00</p></div></div>
+                        <div class="card"><div class="card-icon income"><i class="fas fa-arrow-up"></i></div><div class="card-content"><h3>Receitas do Mês</h3><p id="monthly-income">R$ 0,00</p></div></div>
+                        <div class="card"><div class="card-icon expense"><i class="fas fa-arrow-down"></i></div><div class="card-content"><h3>Despesas do Mês</h3><p id="monthly-expenses">R$ 0,00</p></div></div>
+                        <div class="card"><div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div><div class="card-content"><h3>Economia do Mês</h3><p id="monthly-savings">R$ 0,00</p></div></div>
+                    </div>
+                    <!-- Gráficos e Listas -->
+                    <div class="dashboard-grid">
+                        <div class="chart-container card-large">
+                            <h3>Receitas vs. Despesas (Últimos 6 Meses)</h3>
+                            <canvas id="main-chart"></canvas>
+                        </div>
+                        <div class="list-container">
+                            <h3>Últimas Transações</h3>
+                            <ul id="recent-transactions-list">
+                                <!-- Transações serão inseridas via JS -->
+                            </ul>
+                        </div>
+                        <div class="list-container">
+                            <h3>Faturas Próximas</h3>
+                            <ul id="upcoming-invoices-list">
+                                <!-- Faturas serão inseridas via JS -->
+                            </ul>
+                        </div>
+                         <div class="list-container">
+                            <h3>Orçamentos do Mês</h3>
+                            <div id="budgets-overview-list">
+                                <!-- Orçamentos serão inseridos via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção de Transações -->
+                <section id="transactions-page" class="page hidden">
+                    <h2>Extrato de Transações</h2>
+                    <div class="actions-bar">
+                        <button id="add-transaction-btn" class="btn-primary"><i class="fas fa-plus"></i> Nova Transação</button>
+                        <!-- Filtros -->
+                    </div>
+                    <div class="table-container">
+                        <table id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Conta</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Linhas da tabela serão inseridas via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Outras Seções (Contas, Cartões, etc.) -->
+                <section id="accounts-page" class="page hidden"><h2>Gestão de Contas</h2><!-- Conteúdo aqui --></section>
+                <section id="cards-page" class="page hidden"><h2>Controle de Cartões de Crédito</h2><!-- Conteúdo aqui --></section>
+                <section id="budgets-page" class="page hidden"><h2>Orçamentos Mensais</h2><!-- Conteúdo aqui --></section>
+                <section id="goals-page" class="page hidden"><h2>Meus Objetivos</h2><!-- Conteúdo aqui --></section>
+                <section id="reports-page" class="page hidden"><h2>Relatórios e Gráficos</h2><!-- Conteúdo aqui --></section>
+                <section id="tools-page" class="page hidden"><h2>Ferramentas Financeiras</h2><!-- Conteúdo aqui --></section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Transação -->
+    <div id="transaction-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="modal-title">Nova Transação</h3>
+            <form id="transaction-form">
+                <input type="hidden" id="transaction-id">
+                <div class="form-group">
+                    <label for="transaction-type">Tipo</label>
+                    <select id="transaction-type" required>
+                        <option value="despesa">Despesa</option>
+                        <option value="receita">Receita</option>
+                        <option value="transferencia">Transferência</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-description">Descrição</label>
+                    <input type="text" id="transaction-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount">Valor</label>
+                    <input type="number" step="0.01" id="transaction-amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-date">Data</label>
+                    <input type="date" id="transaction-date" required>
+                </div>
+                 <div class="form-group">
+                    <label for="transaction-account">Conta</label>
+                    <select id="transaction-account" required>
+                        <!-- Opções de conta carregadas via JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-category">Categoria</label>
+                    <input type="text" id="transaction-category" required>
+                </div>
+                <div class="form-group form-group-checkbox">
+                    <input type="checkbox" id="transaction-paid">
+                    <label for="transaction-paid">Pago/Recebido</label>
+                </div>
+                <button type="submit" class="btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts JS -->
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
