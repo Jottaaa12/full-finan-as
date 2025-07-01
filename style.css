@@ -173,7 +173,8 @@ a:hover {
     flex-direction: column;
     padding: 1.5rem 1rem;
     border-right: 1px solid var(--border-color);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease-in-out;
+    z-index: 3000;
 }
 
 .sidebar-header {
@@ -621,6 +622,42 @@ a:hover {
     color: var(--text-light);
 }
 
+/* --- Seção de Objetivos --- */
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.goal-card {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.goal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.goal-card-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.goal-card-body .goal-progress-text {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
 
 /* --- Modal --- */
 .modal-container {
@@ -658,7 +695,7 @@ a:hover {
     color: var(--text-light);
 }
 
-#transaction-modal-title, #account-modal-title, #budget-modal-title {
+#transaction-modal-title, #account-modal-title, #budget-modal-title, #goal-modal-title {
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
@@ -684,6 +721,13 @@ a:hover {
     color: var(--text-color);
 }
 
+.form-group small {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    display: block;
+}
+
 .form-group-checkbox {
     display: flex;
     align-items: center;
@@ -694,8 +738,72 @@ a:hover {
 }
 
 
-/* --- Responsividade --- */
-@media (min-width: 768px) {
+/* --- Responsividade e Menu Mobile --- */
+.menu-toggle-btn {
+    display: none; /* Escondido em telas grandes */
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2999; /* Abaixo da sidebar */
+    transition: opacity 0.3s ease-in-out;
+}
+.sidebar-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        transform: translateX(-100%);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .page-content {
+        padding: 1rem;
+        padding-top: 4.5rem; /* Espaço para o header e botão */
+    }
+    .page-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--bg-light);
+        padding: 1rem;
+        padding-left: 4rem; /* Espaço para o botão */
+        z-index: 100;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .menu-toggle-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 3001; /* Acima de tudo */
+        background-color: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+}
+
+@media (min-width: 769px) {
     .dashboard-grid {
         grid-template-columns: 2fr 1fr;
     }
@@ -710,25 +818,5 @@ a:hover {
     }
     .dashboard-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
-        transform: translateX(-100%);
-        z-index: 2000;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .page-content {
-        padding: 1rem;
-    }
-    .page-header {
-        padding-left: 3rem; /* Espaço para o botão do menu hamburguer */
     }
 }
