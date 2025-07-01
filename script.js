@@ -1,39 +1,21 @@
 // =============================================================================
 // SCRIPT PRINCIPAL DA APLICAÇÃO - Full Finanças
 // =============================================================================
-// STATUS DO PROJETO: BETA 1
+// STATUS DO PROJETO: BETA 2 FINALIZADO
 //
-// Funcionalidades Implementadas:
-// ✔️ Autenticação de Usuários (Login, Registro)
-// ✔️ Gestão de Contas (Contas Correntes, Poupança, etc.)
-// ✔️ Gestão de Transações (Receitas e Despesas)
-// ✔️ Cálculo de Saldo em Tempo Real
-// ✔️ Controle de Cartões de Crédito (Cálculo de Fatura)
-// ✔️ Gestão de Orçamentos com acompanhamento visual
-// ✔️ Dashboard com Resumo Financeiro e Gráfico
-// ✔️ Cache de dados local para performance
-// ✔️ Correção de Bug: Menu lateral não aparecia em dispositivos móveis.
-// ✔️ Gestão de Objetivos/Metas com acompanhamento visual
-// ✔️ Pagamento de Fatura de Cartão
-// ✔️ Transações Recorrentes e Parceladas
-// ✔️ Anexo de Comprovantes
-// ✔️ Relatórios Avançados
-// ✔️ Exportação de Dados (Excel/PDF)
-// ✔️ Calculadora de Juros Compostos
-// ✔️ Perfil do Usuário (Fase 1: Informações Pessoais e Segurança)
-// ✔️ Perfil do Usuário (Fase 2: Personalização - Foto e Moeda)
-// ✔️ Perfil do Usuário (Fase 3: Gerenciamento de Dados e "Zona de Perigo")
-// ✔️ Seção "Apoie o Projeto" com doação PIX
-// ✔️ Rodapé BETA 1
+// Próximos Passos (A Implementar):
+// (Todos os itens da BETA 2 concluídos!)
 //
-// 🎉 SEÇÃO PERFIL DO USUÁRIO CONCLUÍDA!
-// 🚀 PROJETO OFICIALIZADO COMO BETA 1!
+// Funcionalidades já concluídas:
+// ✅ Dashboard do Administrador (Métricas Gerais)
+// ✅ Ferramentas de Suporte Ativo (Editar/Excluir transações de usuários)
+// ✅ Ajuste Manual de Saldo de Contas (Admin)
+// ✅ Ferramentas de Diagnóstico (Admin)
+// ✅ Relatório de Fluxo de Caixa Projetado
+// ✅ Conciliação Bancária via CSV
+// ✅ Controle de Contas a Pagar/Receber
+// ✅ Sistema de Feedback e Painel de Admin
 //
-// PRÓXIMAS FASES (Nova Ordem de Prioridade):
-// 1. Controle de Contas a Pagar/Receber
-// 2. Conciliação Bancária (Importação de Extrato CSV)
-// 3. Alertas e Notificações
-// =============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -169,6 +151,182 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentAmount = document.getElementById('payment-amount');
     const paymentSourceAccount = document.getElementById('payment-source-account');
 
+    // Contas a Pagar/Receber
+    const payablesPage = document.getElementById('payables-page');
+    const payablesTabs = document.querySelectorAll('.payables-tabs .tab-btn');
+    const payablesTabContents = {
+        overdue: document.getElementById('overdue-tab'),
+        today: document.getElementById('today-tab'),
+        next7: document.getElementById('next7-tab'),
+        next30: document.getElementById('next30-tab')
+    };
+    const payablesLists = {
+        overdue: document.getElementById('payables-overdue-list'),
+        today: document.getElementById('payables-today-list'),
+        next7: document.getElementById('payables-next7-list'),
+        next30: document.getElementById('payables-next30-list')
+    };
+
+    // Card de alerta de próximos vencimentos
+    const payablesAlertCard = document.getElementById('payables-alert-card');
+    const payablesAlertList = document.getElementById('payables-alert-list');
+
+    // Conciliação Bancária
+    const reconciliationCsvInput = document.getElementById('reconciliation-csv-input');
+    const reconciliationFileName = document.getElementById('reconciliation-file-name');
+    const reconciliationProcessBtn = document.getElementById('reconciliation-process-btn');
+    const reconciliationResults = document.getElementById('reconciliation-results');
+    const reconciliationToLaunchList = document.getElementById('reconciliation-to-launch-list');
+    const reconciliationMatchedInfo = document.getElementById('reconciliation-matched-info');
+
+    let reconciliationParsedRows = [];
+    let reconciliationMatches = [];
+    let reconciliationToLaunch = [];
+
+    if (reconciliationCsvInput) {
+        reconciliationCsvInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                reconciliationFileName.textContent = file.name;
+                reconciliationProcessBtn.disabled = false;
+            } else {
+                reconciliationFileName.textContent = '';
+                reconciliationProcessBtn.disabled = true;
+            }
+        });
+    }
+
+    if (reconciliationProcessBtn) {
+        reconciliationProcessBtn.addEventListener('click', () => {
+            const file = reconciliationCsvInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                reconciliationParsedRows = parseCsvToRows(text);
+                processReconciliation();
+            };
+            reader.readAsText(file, 'utf-8');
+        });
+    }
+
+    function parseCsvToRows(text) {
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const rows = [];
+        for (let line of lines) {
+            // Suporta vírgula ou ponto e vírgula
+            let cols = line.split(';');
+            if (cols.length < 3) cols = line.split(',');
+            if (cols.length < 3) continue;
+            // Data, Descrição, Valor
+            let [date, description, value] = cols;
+            date = date.trim();
+            description = description.trim();
+            value = value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            rows.push({ date, description, value: parseFloat(value) });
+        }
+        return rows;
+    }
+
+    function processReconciliation() {
+        if (!Array.isArray(reconciliationParsedRows) || reconciliationParsedRows.length === 0) return;
+        reconciliationMatches = [];
+        reconciliationToLaunch = [];
+        // Normaliza userTransactions para busca
+        const trans = (userTransactions || []).map(t => ({
+            date: t.date ? t.date.toDate() : null,
+            amount: t.amount,
+            id: t.id
+        }));
+        reconciliationParsedRows.forEach(row => {
+            const csvDate = parseCsvDate(row.date);
+            const csvValue = row.value;
+            // Busca por valor próximo (diferença <= 0.05) e data próxima (mesmo dia, anterior ou seguinte)
+            const found = trans.find(t => {
+                if (!t.date) return false;
+                const diffDays = Math.abs((t.date - csvDate) / (1000*60*60*24));
+                return Math.abs(t.amount - csvValue) <= 0.05 && diffDays <= 1;
+            });
+            if (found) {
+                reconciliationMatches.push(row);
+            } else {
+                reconciliationToLaunch.push(row);
+            }
+        });
+        renderReconciliationResults();
+    }
+
+    function parseCsvDate(str) {
+        // Suporta formatos dd/mm/yyyy ou yyyy-mm-dd
+        if (/\d{2}\/\d{2}\/\d{4}/.test(str)) {
+            const [d, m, y] = str.split('/');
+            return new Date(`${y}-${m}-${d}T00:00:00`);
+        } else if (/\d{4}-\d{2}-\d{2}/.test(str)) {
+            return new Date(str);
+        }
+        return new Date(str);
+    }
+
+    function renderReconciliationResults() {
+        reconciliationResults.classList.remove('hidden');
+        // Transações a serem lançadas
+        reconciliationToLaunchList.innerHTML = '';
+        if (reconciliationToLaunch.length === 0) {
+            reconciliationToLaunchList.innerHTML = '<li class="empty-state-small">Nenhuma transação nova encontrada no extrato.</li>';
+        } else {
+            reconciliationToLaunch.forEach((row, idx) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><b>${row.date}</b> - ${row.description} <strong style="color: var(--primary-color)">${formatCurrency(row.value)}</strong></span>
+                    <button class="btn-primary reconciliation-launch-btn" data-idx="${idx}"><i class="fas fa-plus"></i> Lançar</button>
+                `;
+                reconciliationToLaunchList.appendChild(li);
+            });
+        }
+        // Transações já conciliadas
+        if (reconciliationMatches.length === 0) {
+            reconciliationMatchedInfo.innerHTML = '<span class="empty-state-small">Nenhuma transação do extrato já está lançada.</span>';
+        } else {
+            reconciliationMatchedInfo.innerHTML = `<span>${reconciliationMatches.length} transação(ões) do extrato já estão lançadas no sistema.</span>`;
+        }
+    }
+
+    // Lançamento rápido: abrir modal de Nova Transação pré-preenchido
+    if (reconciliationToLaunchList) {
+        reconciliationToLaunchList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('reconciliation-launch-btn') || e.target.closest('.reconciliation-launch-btn')) {
+                const btn = e.target.closest('.reconciliation-launch-btn');
+                const idx = btn.getAttribute('data-idx');
+                const row = reconciliationToLaunch[idx];
+                if (row) {
+                    openReconciliationTransactionModal(row);
+                }
+            }
+        });
+    }
+
+    function openReconciliationTransactionModal(row) {
+        if (!transactionModal || !transactionForm) return;
+        transactionForm.reset();
+        transactionModalTitle.textContent = 'Nova Transação (Conciliação)';
+        // Preencher campos
+        transactionForm['transaction-date'].value = formatDateForInput(row.date);
+        transactionForm['transaction-description'].value = row.description;
+        transactionForm['transaction-amount'].value = row.value;
+        // O usuário só precisa escolher categoria e conta
+        openModal(transactionModal);
+    }
+
+    function formatDateForInput(dateStr) {
+        // Aceita string dd/mm/yyyy ou yyyy-mm-dd
+        if (/\d{2}\/\d{2}\/\d{4}/.test(dateStr)) {
+            const [d, m, y] = dateStr.split('/');
+            return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        } else if (/\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+            return dateStr;
+        }
+        return '';
+    }
 
     // --- ESTADO DA APLICAÇÃO (CACHE LOCAL) ---
     let currentUser = null;
@@ -208,15 +366,22 @@ document.addEventListener('DOMContentLoaded', () => {
         authContainer.classList.add('hidden');
         
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        let userData = {};
         if (userDoc.exists) {
-            const userData = userDoc.data();
+            userData = userDoc.data();
             userNameDisplay.textContent = userData.name || currentUser.email;
-            
-            // Carregar foto de perfil na barra lateral
+            // Carregar foto de perfil na barra lateral e na página de perfil
             if (userData.profilePhotoURL) {
                 sidebarUserPhoto.src = userData.profilePhotoURL;
+                if (typeof profilePhotoPreview !== 'undefined') profilePhotoPreview.src = userData.profilePhotoURL;
+                if (typeof removePhotoBtn !== 'undefined') removePhotoBtn.classList.remove('hidden');
+            } else {
+                // Resetar para imagem padrão se não houver foto
+                const defaultPhoto = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='30' fill='%2394a3b8'>👤</text></svg>";
+                sidebarUserPhoto.src = defaultPhoto;
+                if (typeof profilePhotoPreview !== 'undefined') profilePhotoPreview.src = defaultPhoto;
+                if (typeof removePhotoBtn !== 'undefined') removePhotoBtn.classList.add('hidden');
             }
-            
             // Carregar moeda padrão
             if (userData.currency) {
                 userCurrency = userData.currency;
@@ -224,16 +389,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             userNameDisplay.textContent = currentUser.email;
         }
-        
         await fetchAllData();
-        setupMobileMenu(); // CORREÇÃO BUG
+        setupMobileMenu();
         navigateTo('dashboard');
-        
         loader.classList.add('hidden');
         appContainer.classList.remove('hidden');
         // Tour guiado
         if (userData.hasCompletedTour === false) {
             setTimeout(() => startTour(), 800);
+        }
+        // Após obter currentUser:
+        const adminPanelLink = document.getElementById('admin-panel-link');
+        if (currentUser && currentUser.uid === "d1J7P7mkgxgHz3kDQtGiDbgmi1M2") {
+            adminPanelLink.classList.remove('hidden');
         }
     }
     
@@ -372,6 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'reports': loadReportsData(); break;
             case 'profile': loadProfileData(); break;
             case 'support': /* Página de suporte não precisa carregar dados */ break;
+            case 'payables': loadPayablesData(); break;
+            case 'feedback': /* Nada a carregar */ break;
         }
     }
     
@@ -387,24 +557,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA DO PERFIL DO USUÁRIO ---
     function loadProfileData() {
         if (!currentUser) return;
-        
-        // Carregar dados do usuário
         profileEmail.value = currentUser.email;
-        
-        // Buscar dados do usuário no Firestore
         db.collection('users').doc(currentUser.uid).get()
             .then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
                     profileName.value = userData.name || '';
-                    
                     // Carregar foto de perfil
                     if (userData.profilePhotoURL) {
                         profilePhotoPreview.src = userData.profilePhotoURL;
                         sidebarUserPhoto.src = userData.profilePhotoURL;
                         removePhotoBtn.classList.remove('hidden');
+                    } else {
+                        // Resetar para imagem padrão se não houver foto
+                        const defaultPhoto = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='30' fill='%2394a3b8'>👤</text></svg>";
+                        profilePhotoPreview.src = defaultPhoto;
+                        sidebarUserPhoto.src = defaultPhoto;
+                        removePhotoBtn.classList.add('hidden');
                     }
-                    
                     // Carregar moeda padrão
                     if (userData.currency) {
                         userCurrency = userData.currency;
@@ -996,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         renderReportsChart(expensesByCategory);
         renderSummaryTable(expensesByCategory);
+        renderCashflowProjection();
     }
 
     function filterTransactionsByPeriod(period) {
@@ -1297,8 +1468,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA DA PÁGINA DE CARTÕES ---
     function loadCardsData() {
         creditCardsList.innerHTML = '';
+        // Filtro correto: apenas cartões de crédito
         const creditCards = userAccounts.filter(acc => acc.type === 'cartao_credito');
-
+        if (creditCards.length === 0) {
+            creditCardsList.innerHTML = '<p class="empty-state">Nenhum cartão de crédito cadastrado. Crie um novo cartão na página de Contas.</p>';
+            return;
+        }
         creditCards.forEach(card => {
             const billCycle = getBillingCycle(card);
             const billTransactions = userTransactions.filter(t => 
@@ -1307,7 +1482,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 t.date.toDate() <= billCycle.end
             );
             const billTotal = billTransactions.reduce((sum, t) => sum + t.amount, 0);
-
             const cardElement = document.createElement('div');
             cardElement.className = 'credit-card-bill';
             cardElement.innerHTML = `
@@ -1741,6 +1915,34 @@ document.addEventListener('DOMContentLoaded', () => {
             // Renderizar gráfico com dados calculados
             renderMainChart(labels, incomeData, expenseData);
         }
+
+        // --- ALERTA DE PRÓXIMOS VENCIMENTOS ---
+        if (payablesAlertList) {
+            payablesAlertList.innerHTML = '';
+            // Filtrar transações pendentes
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            const pendentes = userTransactions.filter(t => t.isPaid === false);
+            const vencidas = pendentes.filter(t => t.date.toDate() < startOfToday);
+            const vencendoHoje = pendentes.filter(t => t.date.toDate() >= startOfToday && t.date.toDate() <= endOfToday);
+            // Mostrar até 3 vencidas e 3 vencendo hoje
+            const mostrar = [...vencidas.slice(0,3), ...vencendoHoje.slice(0,3)];
+            if (mostrar.length === 0) {
+                payablesAlertList.innerHTML = '<li class="empty-state-small">Nenhuma conta vencida ou vencendo hoje.</li>';
+            } else {
+                mostrar.forEach(t => {
+                    const li = document.createElement('li');
+                    const isVencida = t.date.toDate() < startOfToday;
+                    const icon = '<i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i>';
+                    li.innerHTML = `
+                        <span>${icon} ${t.description} <small>(${t.date.toDate().toLocaleDateString('pt-BR')}${isVencida ? ' - Vencida' : ' - Hoje'})</small></span>
+                        <strong style="color: ${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};">${formatCurrency(t.amount)}</strong>
+                    `;
+                    payablesAlertList.appendChild(li);
+                });
+            }
+        }
     }
 
     function renderBudgetsOverview() {
@@ -2157,5 +2359,215 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (document.getElementById('tour-close-btn')) {
         document.getElementById('tour-close-btn').onclick = () => endTour();
+    }
+
+    // --- LÓGICA DAS ABAS DE CONTAS A PAGAR ---
+    if (payablesTabs && payablesTabs.length) {
+        payablesTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                payablesTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                Object.keys(payablesTabContents).forEach(key => {
+                    payablesTabContents[key].classList.add('hidden');
+                });
+                const tabKey = tab.getAttribute('data-tab');
+                payablesTabContents[tabKey].classList.remove('hidden');
+            });
+        });
+    }
+
+    // --- FUNÇÃO PARA CARREGAR CONTAS A PAGAR/RECEBER ---
+    function loadPayablesData() {
+        if (!currentUser) return;
+        // Limpar listas
+        Object.values(payablesLists).forEach(list => list.innerHTML = '');
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        const next7 = new Date(now); next7.setDate(now.getDate() + 7);
+        const next30 = new Date(now); next30.setDate(now.getDate() + 30);
+        // Filtrar transações pendentes
+        const pendentes = userTransactions.filter(t => t.isPaid === false);
+        // Separar por período
+        const vencidas = pendentes.filter(t => t.date.toDate() < startOfToday);
+        const vencendoHoje = pendentes.filter(t => t.date.toDate() >= startOfToday && t.date.toDate() <= endOfToday);
+        const proximos7 = pendentes.filter(t => t.date.toDate() > endOfToday && t.date.toDate() <= next7);
+        const proximos30 = pendentes.filter(t => t.date.toDate() > next7 && t.date.toDate() <= next30);
+        // Renderizar listas
+        renderPayablesList(payablesLists.overdue, vencidas);
+        renderPayablesList(payablesLists.today, vencendoHoje);
+        renderPayablesList(payablesLists.next7, proximos7);
+        renderPayablesList(payablesLists.next30, proximos30);
+    }
+
+    function renderPayablesList(listElement, items) {
+        if (!items.length) {
+            listElement.innerHTML = '<li class="empty-state-small">Nenhuma transação encontrada.</li>';
+            return;
+        }
+        items.sort((a, b) => a.date.seconds - b.date.seconds);
+        items.forEach(t => {
+            const li = document.createElement('li');
+            const icon = '<i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i>';
+            li.innerHTML = `
+                <span>${icon} ${t.description} <small>(${t.date.toDate().toLocaleDateString('pt-BR')})</small></span>
+                <strong style="color: ${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};">${formatCurrency(t.amount)}</strong>
+            `;
+            listElement.appendChild(li);
+        });
+    }
+
+    // Projeção de Fluxo de Caixa
+    const cashflowProjectionPeriod = document.getElementById('cashflow-projection-period');
+    const cashflowProjectionChartCanvas = document.getElementById('cashflow-projection-chart');
+    let cashflowProjectionChart = null;
+
+    if (cashflowProjectionPeriod) {
+        cashflowProjectionPeriod.addEventListener('change', renderCashflowProjection);
+    }
+    // Renderizar ao carregar a página de relatórios
+    function loadReportsData() {
+        // ... existente ...
+        renderCashflowProjection();
+    }
+
+    function renderCashflowProjection() {
+        if (!cashflowProjectionChartCanvas) return;
+        // 1. Saldo atual (todas as contas exceto cartões de crédito)
+        const saldoAtual = (userAccounts || []).filter(acc => acc.type !== 'cartao_credito').reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
+        // 2. Transações futuras pendentes
+        const dias = parseInt(cashflowProjectionPeriod?.value || '30', 10);
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        // Array de datas
+        const datas = [];
+        for (let i = 0; i < dias; i++) {
+            const d = new Date(hoje);
+            d.setDate(hoje.getDate() + i);
+            datas.push(new Date(d));
+        }
+        // Inicializa array de saldos
+        const saldos = [saldoAtual];
+        for (let i = 0; i < dias; i++) {
+            // Transações do dia i
+            const dataRef = datas[i];
+            const receitas = (userTransactions || []).filter(t => t.isPaid === false && t.type === 'receita' && sameDay(t.date?.toDate?.() || t.date, dataRef)).reduce((sum, t) => sum + t.amount, 0);
+            const despesas = (userTransactions || []).filter(t => t.isPaid === false && t.type === 'despesa' && sameDay(t.date?.toDate?.() || t.date, dataRef)).reduce((sum, t) => sum + t.amount, 0);
+            const saldoAnterior = saldos[i];
+            saldos.push(saldoAnterior + receitas - despesas);
+        }
+        // Monta labels
+        const labels = datas.map(d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }));
+        // Remove o saldo inicial extra
+        saldos.shift();
+        // Cores: vermelho se saldo < 0
+        const corLinha = saldos.some(s => s < 0) ? getCashflowGradient(cashflowProjectionChartCanvas, saldos) : 'var(--primary-color)';
+        // Destroi gráfico anterior
+        if (cashflowProjectionChart) cashflowProjectionChart.destroy();
+        cashflowProjectionChart = new Chart(cashflowProjectionChartCanvas, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Saldo Projetado',
+                    data: saldos,
+                    fill: false,
+                    borderColor: corLinha,
+                    backgroundColor: corLinha,
+                    tension: 0.2,
+                    pointRadius: 2,
+                    pointBackgroundColor: saldos.map(s => s < 0 ? 'var(--danger-color)' : 'var(--primary-color)'),
+                    pointBorderColor: saldos.map(s => s < 0 ? 'var(--danger-color)' : 'var(--primary-color)'),
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Saldo: ${formatCurrency(context.parsed.y)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return formatCurrency(value); }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function sameDay(a, b) {
+        if (!a || !b) return false;
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function getCashflowGradient(canvas, saldos) {
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        // Se algum saldo < 0, faz um gradiente vermelho
+        const n = saldos.length;
+        let firstNegative = saldos.findIndex(s => s < 0);
+        if (firstNegative === -1) firstNegative = n;
+        const stop = firstNegative / n;
+        gradient.addColorStop(0, 'var(--primary-color)');
+        gradient.addColorStop(Math.max(stop - 0.01, 0), 'var(--primary-color)');
+        gradient.addColorStop(stop, 'var(--danger-color)');
+        gradient.addColorStop(1, 'var(--danger-color)');
+        return gradient;
+    }
+
+    // Feedback
+    const feedbackForm = document.getElementById('feedback-form');
+    const feedbackType = document.getElementById('feedback-type');
+    const feedbackSubject = document.getElementById('feedback-subject');
+    const feedbackDescription = document.getElementById('feedback-description');
+    let feedbackMessage = document.getElementById('feedback-message');
+    if (!feedbackMessage) {
+        feedbackMessage = document.createElement('div');
+        feedbackMessage.id = 'feedback-message';
+        feedbackMessage.className = 'feedback-message hidden';
+        feedbackForm?.appendChild(feedbackMessage);
+    }
+
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            feedbackMessage.className = 'feedback-message hidden';
+            feedbackMessage.textContent = '';
+            const data = {
+                type: feedbackType.value,
+                subject: feedbackSubject.value.trim(),
+                description: feedbackDescription.value.trim(),
+                date: new Date(),
+                userId: currentUser ? currentUser.uid : null
+            };
+            if (!data.subject || !data.description) {
+                feedbackMessage.textContent = 'Preencha todos os campos.';
+                feedbackMessage.className = 'feedback-message error';
+                feedbackMessage.classList.remove('hidden');
+                return;
+            }
+            try {
+                await db.collection('feedback').add(data);
+                feedbackForm.reset();
+                feedbackMessage.textContent = 'Feedback enviado com sucesso! Obrigado por contribuir.';
+                feedbackMessage.className = 'feedback-message success';
+                feedbackMessage.classList.remove('hidden');
+            } catch (err) {
+                feedbackMessage.textContent = 'Erro ao enviar feedback. Tente novamente.';
+                feedbackMessage.className = 'feedback-message error';
+                feedbackMessage.classList.remove('hidden');
+            }
+        });
     }
 });
