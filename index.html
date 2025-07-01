@@ -189,7 +189,17 @@
                     </div>
                 </section>
 
-                <section id="budgets-page" class="page hidden"><h2>Orçamentos Mensais</h2><!-- Conteúdo aqui --></section>
+                <!-- Seção de Orçamentos -->
+                <section id="budgets-page" class="page hidden">
+                    <h2>Orçamentos Mensais</h2>
+                     <div class="actions-bar">
+                        <button id="add-budget-btn" class="btn-primary"><i class="fas fa-plus"></i> Novo Orçamento</button>
+                    </div>
+                    <div id="budgets-list" class="budgets-grid">
+                        <!-- Cards de orçamento serão inseridos aqui via JS -->
+                    </div>
+                </section>
+
                 <section id="goals-page" class="page hidden"><h2>Meus Objetivos</h2><!-- Conteúdo aqui --></section>
                 <section id="reports-page" class="page hidden"><h2>Relatórios e Gráficos</h2><!-- Conteúdo aqui --></section>
                 <section id="tools-page" class="page hidden"><h2>Ferramentas Financeiras</h2><!-- Conteúdo aqui --></section>
@@ -290,6 +300,26 @@
                     </div>
                 </div>
                 <button type="submit" class="btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Orçamento -->
+    <div id="budget-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="budget-modal-title">Novo Orçamento</h3>
+            <form id="budget-form">
+                <input type="hidden" id="budget-id">
+                <div class="form-group">
+                    <label for="budget-category">Categoria</label>
+                    <input type="text" id="budget-category" list="common-categories" placeholder="Ex: Alimentação" required>
+                </div>
+                <div class="form-group">
+                    <label for="budget-amount">Valor Mensal</label>
+                    <input type="number" step="0.01" id="budget-amount" placeholder="R$ 0,00" required>
+                </div>
+                <button type="submit" class="btn-primary">Salvar Orçamento</button>
             </form>
         </div>
     </div>
