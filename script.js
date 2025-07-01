@@ -9,12 +9,13 @@
 // ✔️ Gestão de Transações (Receitas e Despesas)
 // ✔️ Cálculo de Saldo em Tempo Real
 // ✔️ Controle de Cartões de Crédito (Cálculo de Fatura)
+// ✔️ Gestão de Orçamentos com acompanhamento visual
 // ✔️ Dashboard com Resumo Financeiro e Gráfico
 // ✔️ Cache de dados local para performance
+// ✔️ Correção de Bug: Menu lateral não aparecia em dispositivos móveis.
+// ✔️ Gestão de Objetivos/Metas com acompanhamento visual
 //
 // Próximos Passos (A Implementar):
-// ⏳ Gestão de Orçamentos (Em implementação nesta versão)
-// ⏳ Gestão de Objetivos/Metas
 // ⏳ Pagamento de Fatura de Cartão
 // ⏳ Transações Recorrentes e Parceladas
 // ⏳ Anexo de Comprovantes
@@ -42,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const userNameDisplay = document.getElementById('user-name-display');
     const navLinks = document.querySelectorAll('.nav-link');
     const pages = document.querySelectorAll('.page');
+    const sidebar = document.querySelector('.sidebar');
+    const menuToggleBtn = document.getElementById('menu-toggle-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
 
     // Dashboard
     const totalBalanceEl = document.getElementById('total-balance');
@@ -78,13 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const budgetModalTitle = document.getElementById('budget-modal-title');
     const budgetsList = document.getElementById('budgets-list');
 
+    // Objetivos
+    const addGoalBtn = document.getElementById('add-goal-btn');
+    const goalModal = document.getElementById('goal-modal');
+    const goalForm = document.getElementById('goal-form');
+    const goalModalTitle = document.getElementById('goal-modal-title');
+    const goalsList = document.getElementById('goals-list');
+
 
     // --- ESTADO DA APLICAÇÃO (CACHE LOCAL) ---
     let currentUser = null;
     let mainChart = null;
     let userAccounts = []; 
     let userTransactions = [];
-    let userBudgets = []; // NOVO
+    let userBudgets = [];
+    let userGoals = [];
 
     // --- INICIALIZAÇÃO ---
 
@@ -97,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userAccounts = [];
             userTransactions = [];
             userBudgets = [];
+            userGoals = [];
             showAuthScreen();
         }
     });
@@ -116,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userNameDisplay.textContent = userDoc.exists ? userDoc.data().name : currentUser.email;
         
         await fetchAllData();
+        setupMobileMenu(); // CORREÇÃO BUG
         navigateTo('dashboard');
         
         loader.classList.add('hidden');
@@ -131,9 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const transactionsSnapshot = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
         userTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // NOVO: Busca orçamentos
         const budgetsSnapshot = await db.collection('budgets').where('userId', '==', currentUser.uid).get();
         userBudgets = budgetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const goalsSnapshot = await db.collection('goals').where('userId', '==', currentUser.uid).get();
+        userGoals = goalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         calculateAllBalances();
     }
@@ -192,10 +208,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return messages[errorCode] || 'Ocorreu um erro. Tente novamente.';
     }
 
-    // --- NAVEGAÇÃO ---
+    // --- NAVEGAÇÃO E MENU MOBILE ---
+    function setupMobileMenu() {
+        menuToggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('hidden');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.add('hidden');
+        });
+    }
+
     navLinks.forEach(link => {
-        link.addEventListener('click', (e) => { e.preventDefault(); navigateTo(link.getAttribute('data-page')); });
+        link.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            navigateTo(link.getAttribute('data-page'));
+            // Fecha o menu no mobile após clicar em um link
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.add('hidden');
+            }
+        });
     });
+    
     function navigateTo(pageName) {
         pages.forEach(p => p.classList.add('hidden'));
         const targetPage = document.getElementById(`${pageName}-page`);
@@ -205,13 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeLink) activeLink.classList.add('active');
         loadPageData(pageName);
     }
+    
     function loadPageData(pageName) {
         switch(pageName) {
             case 'dashboard': loadDashboardData(); break;
             case 'transactions': loadTransactionsData(); break;
             case 'accounts': loadAccountsData(); break;
             case 'cards': loadCardsData(); break;
-            case 'budgets': loadBudgetsData(); break; // NOVO
+            case 'budgets': loadBudgetsData(); break;
+            case 'goals': loadGoalsData(); break;
         }
     }
     
@@ -381,8 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA DE ORÇAMENTOS ---
     function loadBudgetsData() {
         budgetsList.innerHTML = '';
-        const currentMonth = new Date().toISOString().slice(0, 7); // Formato "YYYY-MM"
-        
+        const currentMonth = new Date().toISOString().slice(0, 7);
         const monthlyBudgets = userBudgets.filter(b => b.month === currentMonth);
 
         if (monthlyBudgets.length === 0) {
@@ -394,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const spentAmount = userTransactions
                 .filter(t => t.category === budget.category && t.type === 'despesa' && t.date.toDate().toISOString().slice(0, 7) === currentMonth)
                 .reduce((sum, t) => sum + t.amount, 0);
-            
             const progress = Math.min((spentAmount / budget.amount) * 100, 100);
             const remaining = budget.amount - spentAmount;
             
@@ -429,23 +466,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const budgetId = budgetForm['budget-id'].value;
         const category = budgetForm['budget-category'].value;
         const currentMonth = new Date().toISOString().slice(0, 7);
-
-        // Verifica se já existe um orçamento para essa categoria no mês
         const existingBudget = userBudgets.find(b => b.category === category && b.month === currentMonth);
         if (existingBudget && !budgetId) {
             alert('Já existe um orçamento para esta categoria neste mês.');
             return;
         }
-
         const data = {
             userId: currentUser.uid,
             category: category,
             amount: parseFloat(budgetForm['budget-amount'].value),
             month: currentMonth
         };
-
         try {
-            if (budgetId) { // Edição não está implementada, mas a lógica está aqui
+            if (budgetId) {
                 await db.collection('budgets').doc(budgetId).update(data);
             } else {
                 await db.collection('budgets').add(data);
@@ -471,6 +504,97 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetchAllData();
             loadBudgetsData();
         } catch (error) { console.error("Erro ao excluir orçamento:", error); alert("Não foi possível excluir."); }
+    }
+
+    // --- LÓGICA DE OBJETIVOS ---
+    function loadGoalsData() {
+        goalsList.innerHTML = '';
+
+        if (userGoals.length === 0) {
+            goalsList.innerHTML = '<p class="empty-state">Defina seus objetivos financeiros e acompanhe seu progresso para alcançá-los!</p>';
+            return;
+        }
+
+        userGoals.forEach(goal => {
+            let currentAmount = goal.currentAmount;
+            if (goal.linkedAccountId) {
+                const linkedAccount = userAccounts.find(acc => acc.id === goal.linkedAccountId);
+                if (linkedAccount) {
+                    currentAmount = linkedAccount.currentBalance;
+                }
+            }
+            
+            const progress = Math.min((currentAmount / goal.targetAmount) * 100, 100);
+            
+            const goalCard = document.createElement('div');
+            goalCard.className = 'goal-card';
+            goalCard.innerHTML = `
+                <div class="goal-card-header">
+                    <h4><i class="fas fa-flag-checkered"></i> ${goal.name}</h4>
+                    <button class="btn-danger delete-goal-btn" data-id="${goal.id}">&times;</button>
+                </div>
+                <div class="goal-card-body">
+                    <p class="goal-progress-text">${formatCurrency(currentAmount)} de ${formatCurrency(goal.targetAmount)}</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${progress}%; background-color: var(--secondary-color);"></div>
+                    </div>
+                </div>
+            `;
+            goalsList.appendChild(goalCard);
+        });
+    }
+
+    addGoalBtn.addEventListener('click', () => {
+        goalForm.reset();
+        goalModalTitle.textContent = 'Novo Objetivo';
+        goalForm['goal-id'].value = '';
+        const savingsAccounts = userAccounts.filter(acc => acc.type === 'poupanca' || acc.type === 'investimento');
+        const select = goalForm['goal-linked-account'];
+        select.innerHTML = '<option value="">Nenhuma (depósito manual)</option>';
+        savingsAccounts.forEach(acc => {
+            select.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
+        });
+        openModal(goalModal);
+    });
+
+    goalForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const goalId = goalForm['goal-id'].value;
+        const data = {
+            userId: currentUser.uid,
+            name: goalForm['goal-name'].value,
+            targetAmount: parseFloat(goalForm['goal-target-amount'].value),
+            currentAmount: parseFloat(goalForm['goal-current-amount'].value) || 0,
+            linkedAccountId: goalForm['goal-linked-account'].value || null
+        };
+
+        try {
+            if (goalId) {
+                await db.collection('goals').doc(goalId).update(data);
+            } else {
+                await db.collection('goals').add(data);
+            }
+            await fetchAllData();
+            loadGoalsData();
+            closeModal(goalModal);
+        } catch (error) { console.error("Erro ao salvar objetivo:", error); alert("Não foi possível salvar."); }
+    });
+
+    goalsList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-goal-btn')) {
+            const goalId = e.target.dataset.id;
+            if (confirm('Tem certeza que deseja excluir este objetivo?')) {
+                deleteGoal(goalId);
+            }
+        }
+    });
+
+    async function deleteGoal(id) {
+        try {
+            await db.collection('goals').doc(id).delete();
+            await fetchAllData();
+            loadGoalsData();
+        } catch (error) { console.error("Erro ao excluir objetivo:", error); alert("Não foi possível excluir."); }
     }
 
 
@@ -504,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             recentTransactionsList.appendChild(li);
         });
 
-        renderBudgetsOverview(); // NOVO
+        renderBudgetsOverview();
         renderMainChart();
     }
 
