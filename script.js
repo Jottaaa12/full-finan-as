@@ -114,8 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateAllBalances() {
         userAccounts.forEach(account => {
             if (account.type === 'cartao_credito') {
-                // Saldo de cartão de crédito é a fatura, não o limite. Não calculamos aqui.
-                account.currentBalance = 0; // Representa o impacto no patrimônio, que é nulo até pagar a fatura.
+                account.currentBalance = 0;
             } else {
                 let currentBalance = account.initialBalance;
                 const relevantTransactions = userTransactions.filter(t => t.accountId === account.id);
@@ -128,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE AUTENTICAÇÃO (sem alterações) ---
+    // --- LÓGICA DE AUTENTICAÇÃO ---
     showRegisterLink.addEventListener('click', (e) => { e.preventDefault(); toggleForms(true); });
     showLoginLink.addEventListener('click', (e) => { e.preventDefault(); toggleForms(false); });
     function toggleForms(showRegister) {
@@ -184,18 +183,15 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'dashboard': loadDashboardData(); break;
             case 'transactions': loadTransactionsData(); break;
             case 'accounts': loadAccountsData(); break;
-            case 'cards': loadCardsData(); break; // NOVO
+            case 'cards': loadCardsData(); break;
         }
     }
     
     // --- LÓGICA DE CONTAS E CARTÕES ---
-    
-    // NOVO: Mostra/esconde campos de cartão de crédito no modal
     accountTypeSelect.addEventListener('change', () => {
         const isCreditCard = accountTypeSelect.value === 'cartao_credito';
         creditCardFields.classList.toggle('hidden', !isCreditCard);
         initialBalanceGroup.classList.toggle('hidden', isCreditCard);
-        // Saldo inicial não é obrigatório para cartão
         document.getElementById('account-initial-balance').required = !isCreditCard;
         document.getElementById('card-closing-day').required = isCreditCard;
         document.getElementById('card-due-day').required = isCreditCard;
@@ -212,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div class="account-card-header"><h3>${account.name}</h3><i class="fas fa-wallet icon"></i></div>
                 <p class="account-card-balance">${formatCurrency(account.currentBalance)}</p>
-                <p class="account-card-type">${account.type.replace('_', ' ')}</p>
+                <p class="account-card-type">${account.type.replace(/_/g, ' ')}</p>
                 <div class="account-card-actions">
                     <button class="btn-secondary edit-account-btn" data-id="${account.id}">Editar</button>
                     <button class="btn-danger delete-account-btn" data-id="${account.id}">Excluir</button>
@@ -225,7 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
         accountForm.reset();
         accountModalTitle.textContent = 'Nova Conta';
         accountForm['account-id'].value = '';
-        accountTypeSelect.dispatchEvent(new Event('change')); // Garante estado inicial correto dos campos
+        accountTypeSelect.value = 'conta_corrente'; // Reseta para o padrão
+        accountTypeSelect.dispatchEvent(new Event('change'));
         openModal(accountModal);
     });
 
@@ -267,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'cartao_credito') {
             data.closingDay = parseInt(accountForm['card-closing-day'].value);
             data.dueDate = parseInt(accountForm['card-due-day'].value);
-            data.initialBalance = 0; // Cartão não tem saldo inicial
+            data.initialBalance = 0;
         } else {
             data.initialBalance = parseFloat(accountForm['account-initial-balance'].value);
         }
@@ -293,8 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- LÓGICA DA PÁGINA DE CARTÕES ---
-    
-    // NOVO: Função para carregar e exibir as faturas dos cartões
     function loadCardsData() {
         creditCardsList.innerHTML = '';
         const creditCards = userAccounts.filter(acc => acc.type === 'cartao_credito');
@@ -326,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <ul class="bill-transactions-list">
-                    ${billTransactions.map(t => `<li><span>${t.description}</span><strong>${formatCurrency(t.amount)}</strong></li>`).join('')}
+                    ${billTransactions.map(t => `<li><span>${t.description}</span><strong>${formatCurrency(t.amount)}</strong></li>`).join('') || '<li>Nenhuma transação na fatura atual.</li>'}
                 </ul>
                 <div class="account-card-actions" style="margin-top: 1rem;">
                     <button class="btn-primary" disabled>Pagar Fatura</button>
@@ -336,23 +331,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // NOVO: Função para determinar o ciclo da fatura atual de um cartão
     function getBillingCycle(card) {
         const today = new Date();
         const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth(); // 0-11
+        const currentMonth = today.getMonth();
         const closingDay = card.closingDay;
         const dueDay = card.dueDate;
 
         let start, end, due;
 
         if (today.getDate() > closingDay) {
-            // A fatura atual já começou neste mês e fecha no próximo
             start = new Date(currentYear, currentMonth, closingDay + 1);
             end = new Date(currentYear, currentMonth + 1, closingDay);
             due = new Date(currentYear, currentMonth + 1, dueDay);
         } else {
-            // A fatura atual começou no mês passado e fecha neste mês
             start = new Date(currentYear, currentMonth - 1, closingDay + 1);
             end = new Date(currentYear, currentMonth, closingDay);
             due = new Date(currentYear, currentMonth, dueDay);
@@ -366,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return;
         const totalBalance = userAccounts
             .filter(acc => acc.type !== 'cartao_credito')
-            .reduce((sum, acc) => sum + acc.currentBalance, 0);
+            .reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
         totalBalanceEl.textContent = formatCurrency(totalBalance);
         
         const now = new Date();
@@ -393,7 +385,65 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMainChart();
     }
     
-    async function renderMainChart() { /* Lógica do gráfico permanece a mesma */ }
+    function renderMainChart() {
+        if (!currentUser) return;
+    
+        const labels = [];
+        const incomeData = [];
+        const expenseData = [];
+        
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const month = d.toLocaleString('pt-BR', { month: 'short' });
+            const year = d.getFullYear();
+            labels.push(`${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`);
+            
+            const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+            const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+            let income = 0;
+            let expense = 0;
+            userTransactions.forEach(t => {
+                const transactionDate = t.date.toDate();
+                if (transactionDate >= startOfMonth && transactionDate <= endOfMonth) {
+                    if (t.type === 'receita') income += t.amount;
+                    if (t.type === 'despesa') expense += t.amount;
+                }
+            });
+            incomeData.push(income);
+            expenseData.push(expense);
+        }
+        
+        if (mainChart) {
+            mainChart.destroy();
+        }
+
+        mainChart = new Chart(mainChartCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Receitas',
+                    data: incomeData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Despesas',
+                    data: expenseData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
 
     // --- LÓGICA DE TRANSAÇÕES ---
     function populateAccountOptions() {
@@ -425,4 +475,43 @@ document.addEventListener('DOMContentLoaded', () => {
             isPaid: transactionForm['transaction-paid'].checked
         };
         try {
-            if (t
+            if (transactionId) {
+                await db.collection('transactions').doc(transactionId).update(data);
+            } else {
+                await db.collection('transactions').add(data);
+            }
+            await fetchAllData();
+            closeModal(transactionModal);
+            loadPageData(document.querySelector('.page.active').id.replace('-page', ''));
+        } catch (error) { console.error("Erro ao salvar transação: ", error); alert("Não foi possível salvar a transação."); }
+    });
+
+    function loadTransactionsData() {
+        if (!currentUser) return;
+        transactionsTableBody.innerHTML = '';
+        const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
+        sortedTransactions.forEach(t => {
+            const accountName = userAccounts.find(acc => acc.id === t.accountId)?.name || 'N/A';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${t.date.toDate().toLocaleDateString('pt-BR')}</td> <td>${t.description}</td> <td>${t.category}</td>
+                <td>${accountName}</td> <td style="color: ${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};">${formatCurrency(t.amount)}</td>
+                <td>${t.isPaid ? 'Pago' : 'Pendente'}</td> <td><!-- Ações --></td>
+            `;
+            transactionsTableBody.appendChild(tr);
+        });
+    }
+
+    // --- FUNÇÕES UTILITÁRIAS ---
+    function openModal(modalElement) { modalElement.classList.remove('hidden'); }
+    function closeModal(modalElement) { modalElement.classList.add('hidden'); }
+    document.querySelectorAll('.modal-container').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.classList.contains('modal-close-btn')) { closeModal(modal); }
+        });
+    });
+    function formatCurrency(value) {
+        if (typeof value !== 'number') value = 0;
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+});
