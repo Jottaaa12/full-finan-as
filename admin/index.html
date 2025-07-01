@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Feedbacks | Full Finanças</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="../firebase-config.js"></script>
+</head>
+<body>
+    <header class="admin-header">
+        <h1>Painel de Admin</h1>
+        <a href="../" class="btn-back-to-app">
+            <i class="fas fa-arrow-left"></i> Voltar ao App
+        </a>
+    </header>
+    <div class="admin-container">
+        <div class="admin-tabs">
+            <button class="admin-tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="admin-tab-btn" data-tab="usuarios">Gerenciar Usuários</button>
+            <button class="admin-tab-btn" data-tab="feedbacks">Feedbacks</button>
+        </div>
+        <div id="tab-dashboard" class="admin-tab-content">
+            <h2>Dashboard do Administrador</h2>
+            <div class="admin-stats-grid">
+                <div class="stat-card" id="stat-total-users">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-label">Total de Usuários</div>
+                    <div class="stat-value">-</div>
+                </div>
+                <div class="stat-card" id="stat-new-users">
+                    <i class="fas fa-user-plus"></i>
+                    <div class="stat-label">Novos Usuários (7 dias)</div>
+                    <div class="stat-value">-</div>
+                </div>
+                <div class="stat-card" id="stat-total-transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <div class="stat-label">Total de Transações</div>
+                    <div class="stat-value">-</div>
+                </div>
+                <div class="stat-card" id="stat-feedbacks-pending">
+                    <i class="fas fa-comment-dots"></i>
+                    <div class="stat-label">Feedbacks Pendentes</div>
+                    <div class="stat-value">-</div>
+                </div>
+            </div>
+        </div>
+        <div id="tab-usuarios" class="admin-tab-content hidden">
+            <h2>Gerenciar Usuários</h2>
+            <div class="search-container">
+                <input type="search" id="user-search-input" placeholder="Buscar por nome ou email...">
+            </div>
+            <div id="user-cards-container" class="user-cards-container">
+                <!-- Cards de usuários inseridos via JS -->
+            </div>
+        </div>
+        <div id="tab-feedbacks" class="admin-tab-content hidden">
+            <div id="login-section" class="admin-login-section">
+                <h2>Painel Admin - Full Finanças</h2>
+                <form id="admin-login-form" class="admin-login-form">
+                    <input type="email" id="admin-email" placeholder="Email" required>
+                    <input type="password" id="admin-password" placeholder="Senha" required>
+                    <button type="submit">Entrar</button>
+                    <div id="admin-login-message" class="admin-message"></div>
+                </form>
+            </div>
+            <div id="admin-panel" class="admin-panel hidden">
+                <h2>Feedbacks Recebidos</h2>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Assunto</th>
+                            <th>Descrição</th>
+                            <th>UserID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <!-- Feedbacks inseridos via JS -->
+                    </tbody>
+                </table>
+                <button id="admin-logout-btn" class="admin-logout-btn">Sair</button>
+            </div>
+            <div id="access-denied" class="access-denied hidden">
+                <h2>Acesso Negado</h2>
+                <p>Você não tem permissão para acessar este painel.</p>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Ver Transações -->
+    <div id="modal-transacoes" class="admin-modal hidden">
+        <div class="admin-modal-content">
+            <span class="admin-modal-close" id="close-modal-transacoes">&times;</span>
+            <h3>Últimas 10 Transações</h3>
+            <div id="modal-transacoes-list"></div>
+        </div>
+    </div>
+    <!-- Modal: Confirmação de Deleção -->
+    <div id="modal-confirm-delete" class="admin-modal hidden">
+        <div class="admin-modal-content">
+            <span class="admin-modal-close" id="close-modal-delete">&times;</span>
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja deletar este usuário e todos os seus dados? Esta ação não poderá ser desfeita.</p>
+            <button id="btn-confirm-delete" class="admin-logout-btn">Deletar</button>
+            <button id="btn-cancel-delete" class="admin-tab-btn">Cancelar</button>
+        </div>
+    </div>
+    <!-- Modal de Detalhes do Usuário -->
+    <div id="user-details-modal" class="modal-container hidden">
+        <div class="modal-content large">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="user-details-title">Detalhes de [Nome do Usuário]</h3>
+            <div class="user-details-grid">
+                <div id="details-accounts-section" class="details-section"><h4>Contas</h4><ul class="details-list"></ul></div>
+                <div id="details-budgets-section" class="details-section"><h4>Orçamentos do Mês</h4><ul class="details-list"></ul></div>
+                <div id="details-goals-section" class="details-section"><h4>Objetivos</h4><ul class="details-list"></ul></div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de Ajuste de Saldo -->
+    <div id="adjust-balance-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="close-adjust-balance-modal">&times;</button>
+            <h3>Ajustar Saldo da Conta</h3>
+            <form id="adjust-balance-form">
+                <input type="hidden" id="adjust-account-id">
+                <input type="hidden" id="adjust-user-id">
+                <div class="form-group">
+                    <label for="adjust-type">Tipo de Ajuste</label>
+                    <select id="adjust-type" required>
+                        <option value="receita">Adicionar ao Saldo (Receita)</option>
+                        <option value="despesa">Subtrair do Saldo (Despesa)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="adjust-amount">Valor do Ajuste</label>
+                    <input type="number" step="0.01" id="adjust-amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="adjust-reason">Motivo do Ajuste (será a descrição da transação)</label>
+                    <input type="text" id="adjust-reason" placeholder="Ex: Correção de saldo inicial" required>
+                </div>
+                <button type="submit" class="btn-primary">Confirmar Ajuste</button>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
