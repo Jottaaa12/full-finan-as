@@ -75,6 +75,7 @@
         <!-- Conteúdo Principal (Pós-login) -->
         <div id="main-content" class="main-content hidden">
             <!-- Menu Lateral -->
+            <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
             <nav class="sidebar">
                 <div class="sidebar-header">
                     <h2 class="sidebar-title">Full Finanças</h2>
@@ -99,6 +100,7 @@
 
             <!-- Área de Conteúdo da Página -->
             <main class="page-content">
+                <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
                 <header class="page-header">
                      <h1>❤ Full finanças: Controle Total das Suas Finanças em um Só Lugar!</h1>
                      <p>Criado by Jotta💜</p>
@@ -200,7 +202,17 @@
                     </div>
                 </section>
 
-                <section id="goals-page" class="page hidden"><h2>Meus Objetivos</h2><!-- Conteúdo aqui --></section>
+                <!-- Seção de Objetivos -->
+                <section id="goals-page" class="page hidden">
+                    <h2>Meus Objetivos</h2>
+                     <div class="actions-bar">
+                        <button id="add-goal-btn" class="btn-primary"><i class="fas fa-plus"></i> Novo Objetivo</button>
+                    </div>
+                    <div id="goals-list" class="goals-grid">
+                        <!-- Cards de objetivos serão inseridos aqui via JS -->
+                    </div>
+                </section>
+
                 <section id="reports-page" class="page hidden"><h2>Relatórios e Gráficos</h2><!-- Conteúdo aqui --></section>
                 <section id="tools-page" class="page hidden"><h2>Ferramentas Financeiras</h2><!-- Conteúdo aqui --></section>
             </main>
@@ -320,6 +332,38 @@
                     <input type="number" step="0.01" id="budget-amount" placeholder="R$ 0,00" required>
                 </div>
                 <button type="submit" class="btn-primary">Salvar Orçamento</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Objetivo -->
+    <div id="goal-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="goal-modal-title">Novo Objetivo</h3>
+            <form id="goal-form">
+                <input type="hidden" id="goal-id">
+                <div class="form-group">
+                    <label for="goal-name">Nome do Objetivo</label>
+                    <input type="text" id="goal-name" placeholder="Ex: Viagem de Férias" required>
+                </div>
+                <div class="form-group">
+                    <label for="goal-target-amount">Valor Alvo</label>
+                    <input type="number" step="0.01" id="goal-target-amount" placeholder="R$ 0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="goal-current-amount">Valor Inicial Guardado</label>
+                    <input type="number" step="0.01" id="goal-current-amount" placeholder="R$ 0,00">
+                </div>
+                <div class="form-group">
+                    <label for="goal-linked-account">Vincular a uma Conta (Opcional)</label>
+                    <select id="goal-linked-account">
+                        <option value="">Nenhuma (depósito manual)</option>
+                        <!-- Contas de poupança/investimento via JS -->
+                    </select>
+                    <small>Se vincular, o saldo da conta será o valor guardado.</small>
+                </div>
+                <button type="submit" class="btn-primary">Salvar Objetivo</button>
             </form>
         </div>
     </div>
