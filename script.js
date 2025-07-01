@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthlyIncomeEl = document.getElementById('monthly-income');
     const monthlyExpensesEl = document.getElementById('monthly-expenses');
     const monthlySavingsEl = document.getElementById('monthly-savings');
-    const mainChartCanvas = document.getElementById('main-chart');
+
     const recentTransactionsList = document.getElementById('recent-transactions-list');
     const budgetsOverviewList = document.getElementById('budgets-overview-list');
     
@@ -1673,8 +1673,52 @@ document.addEventListener('DOMContentLoaded', () => {
         // CONTROLE DE RENDERIZAÇÃO SEGURO - Só renderizar se dashboard estiver ativo
         const dashboardPage = document.getElementById('dashboard-page');
         if (dashboardPage && !dashboardPage.classList.contains('hidden')) {
-            // Renderizar gráfico apenas se a página estiver visível
-            renderMainChart();
+            // Calcular dados do gráfico para os últimos 6 meses
+            const monthlyData = {};
+            
+            // Processar transações uma única vez
+            userTransactions.forEach(t => {
+                try {
+                    const transactionDate = t.date.toDate();
+                    const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { income: 0, expense: 0 };
+                    }
+                    
+                    if (t.type === 'receita') {
+                        monthlyData[monthKey].income += (t.amount || 0);
+                    } else if (t.type === 'despesa') {
+                        monthlyData[monthKey].expense += (t.amount || 0);
+                    }
+                } catch (error) {
+                    console.warn('Erro ao processar transação:', error);
+                }
+            });
+            
+            // Construir dados do gráfico
+            const labels = [];
+            const incomeData = [];
+            const expenseData = [];
+            
+            // Gerar dados para os últimos 6 meses
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                
+                const month = d.toLocaleString('pt-BR', { month: 'short' });
+                const year = d.getFullYear();
+                labels.push(`${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`);
+                
+                const monthKey = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const monthData = monthlyData[monthKey] || { income: 0, expense: 0 };
+                
+                incomeData.push(monthData.income);
+                expenseData.push(monthData.expense);
+            }
+            
+            // Renderizar gráfico com dados calculados
+            renderMainChart(labels, incomeData, expenseData);
         }
     }
 
@@ -1709,117 +1753,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function renderMainChart() {
-        // VERIFICAÇÃO DE SEGURANÇA CRÍTICA
-        if (!currentUser || !mainChartCanvas) {
-            console.warn('renderMainChart: Elementos necessários não encontrados');
-            return;
-        }
-        
-        // PASSO 1: PREPARAÇÃO DOS DADOS (FORA DO GRÁFICO)
-        const monthlyData = {};
-        
-        // Processar transações uma única vez - SEM BUSCAS NO BANCO
-        userTransactions.forEach(t => {
-            try {
-                const transactionDate = t.date.toDate();
-                const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
-                
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = { income: 0, expense: 0 };
-                }
-                
-                if (t.type === 'receita') {
-                    monthlyData[monthKey].income += (t.amount || 0);
-                } else if (t.type === 'despesa') {
-                    monthlyData[monthKey].expense += (t.amount || 0);
-                }
-            } catch (error) {
-                console.warn('Erro ao processar transação:', error);
-                // Continuar processando outras transações
-            }
-        });
-        
-        // PASSO 2: CONSTRUÇÃO SEGURA DOS DADOS DO GRÁFICO
-        const labels = [];
-        const incomeData = [];
-        const expenseData = [];
-        
-        // Gerar dados para os últimos 6 meses de forma segura
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            
-            const month = d.toLocaleString('pt-BR', { month: 'short' });
-            const year = d.getFullYear();
-            labels.push(`${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`);
-            
-            const monthKey = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            const monthData = monthlyData[monthKey] || { income: 0, expense: 0 };
-            
-            incomeData.push(monthData.income);
-            expenseData.push(monthData.expense);
-        }
-        
-        // DESTRUIR GRÁFICO ANTERIOR ANTES DE CRIAR NOVO
+    // NOVA VERSÃO SEGURA DA FUNÇÃO DO GRÁFICO
+    function renderMainChart(labels, incomeData, expenseData) {
+        const chartContainer = document.getElementById('main-chart-container');
+        if (!chartContainer) return; // Verificação de segurança
+
+        // Destrói o gráfico antigo, se existir
         if (mainChart) {
-            try {
-                mainChart.destroy();
-                mainChart = null;
-            } catch (error) {
-                console.warn('Erro ao destruir gráfico anterior:', error);
-            }
+            mainChart.destroy();
         }
-        
-        // PASSO 3: CRIAÇÃO SEGURA DO NOVO GRÁFICO
-        try {
-            mainChart = new Chart(mainChartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Receitas',
-                        data: incomeData,
-                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
-                        borderColor: 'rgba(16, 185, 129, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'Despesas',
-                        data: expenseData,
-                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                        borderColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 300 // Animação mais rápida
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrency(value);
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                usePointStyle: true
-                            }
-                        }
+
+        // Limpa o contêiner e recria o canvas do zero
+        chartContainer.innerHTML = '';
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = 'main-chart';
+        chartContainer.appendChild(newCanvas);
+
+        // Cria a nova instância do gráfico no novo canvas
+        mainChart = new Chart(newCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Receitas',
+                    data: incomeData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Despesas',
+                    data: expenseData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false, // Desativa animações para máxima performance
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-        } catch (error) {
-            console.error('Erro crítico ao criar gráfico:', error);
-            // Em caso de erro, não quebrar a aplicação
-        }
+            }
+        });
     }
 
     // --- LÓGICA DE TRANSAÇÕES ---
