@@ -1799,7 +1799,7 @@ a:hover {
     
     .page-content {
         padding: 1rem;
-        padding-top: 4.5rem; /* Espaço para o header e botão */
+        padding-top: 6.5rem; /* Espaço para o header e botão - CORRIGIDO */
     }
     
     .page-header {
@@ -1861,6 +1861,7 @@ a:hover {
     .page-content {
         margin-left: 0;
         padding: 1rem;
+        padding-top: 6.5rem; /* Espaço para o header e botão - CORRIGIDO */
         padding-bottom: 60px; /* Espaço para o rodapé BETA */
     }
     
