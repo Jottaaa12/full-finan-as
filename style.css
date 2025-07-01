@@ -1986,3 +1986,337 @@ a:hover {
         padding: 1rem 0.5rem;
     }
 }
+
+/* --- Abas de Contas a Pagar/Receber --- */
+.payables-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.tab-btn {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px 8px 0 0;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.tab-btn.active, .tab-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+    border-bottom: 2px solid var(--primary-color);
+}
+.tab-content {
+    background: var(--bg-light);
+    border-radius: 0 0 12px 12px;
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1rem;
+    margin-bottom: 2rem;
+}
+
+/* --- Listas de Contas a Pagar --- */
+.payables-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.payables-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+    gap: 1rem;
+}
+.payables-list li:last-child {
+    border-bottom: none;
+}
+.payables-list .fa-exclamation-circle {
+    margin-right: 0.5rem;
+}
+.payables-list strong {
+    font-weight: 700;
+}
+
+/* --- Card de Alerta de Próximos Vencimentos --- */
+#payables-alert-card {
+    background: linear-gradient(90deg, var(--warning-color) 0%, #fffbe6 100%);
+    border: 1.5px solid var(--warning-color);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+#payables-alert-card .card-icon {
+    background: var(--warning-color);
+    color: #fff;
+}
+#payables-alert-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+}
+#payables-alert-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.98rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #fde68a;
+}
+#payables-alert-list li:last-child {
+    border-bottom: none;
+}
+#payables-alert-list .fa-exclamation-circle {
+    margin-right: 0.5rem;
+}
+
+/* --- Empty State --- */
+.empty-state-small {
+    color: var(--text-light);
+    font-size: 0.98rem;
+    text-align: center;
+    padding: 1.2rem 0;
+}
+
+/* --- Conciliação Bancária --- */
+#bank-reconciliation-card {
+    margin-top: 2rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem 1.5rem;
+}
+.reconciliation-upload-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.reconciliation-upload-label {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: #fff;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.reconciliation-upload-label:hover {
+    background: var(--primary-color-dark);
+}
+.file-name {
+    color: var(--text-light);
+    font-size: 0.98rem;
+    margin-left: 0.5rem;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#reconciliation-process-btn {
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.reconciliation-results {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: flex-start;
+}
+.reconciliation-section {
+    flex: 1 1 320px;
+    background: #f9fafb;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    padding: 1.2rem 1rem;
+    min-width: 280px;
+}
+.reconciliation-section h4 {
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+.reconciliation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.reconciliation-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+    gap: 1rem;
+}
+.reconciliation-list li:last-child {
+    border-bottom: none;
+}
+.reconciliation-list .btn-primary {
+    font-size: 0.95rem;
+    padding: 0.4rem 1rem;
+    margin-left: 1rem;
+}
+.matched-info {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+@media (max-width: 900px) {
+    .reconciliation-results {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+/* --- Projeção de Fluxo de Caixa --- */
+#cashflow-projection-card {
+    margin-top: 2rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem 1.5rem;
+}
+.cashflow-projection-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+#cashflow-projection-period {
+    min-width: 180px;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-light);
+    color: var(--text-color);
+}
+#cashflow-projection-chart {
+    width: 100%;
+    min-height: 320px;
+    max-height: 400px;
+}
+@media (max-width: 900px) {
+    #cashflow-projection-card {
+        padding: 1.2rem 0.5rem;
+    }
+    .cashflow-projection-filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* --- Página de Feedback --- */
+#feedback-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+}
+#feedback-page h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+#feedback-page .card-large {
+    background: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem 2.5rem;
+    width: 100%;
+    max-width: 800px;
+}
+#feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+#feedback-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+#feedback-form label {
+    font-weight: 500;
+    color: var(--text-light);
+}
+#feedback-form input[type="text"],
+#feedback-form select,
+#feedback-form textarea {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--bg-light);
+    color: var(--text-color);
+    resize: none;
+}
+#feedback-form textarea {
+    min-height: 120px;
+    max-height: 300px;
+}
+#feedback-form button[type="submit"] {
+    align-self: flex-end;
+    padding: 0.9rem 2.2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+.feedback-message {
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+.feedback-message.success {
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+}
+.feedback-message.error {
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+@media (max-width: 600px) {
+    #feedback-page .card-large {
+        padding: 1rem 0.5rem;
+    }
+}
+
+.btn-admin {
+    display: block;
+    width: 100%;
+    background-color: var(--info-color);
+    color: white;
+    padding: 0.7rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+.btn-admin:hover {
+    background-color: #2563eb;
+    text-decoration: none;
+}
+.btn-admin i {
+    margin-right: 0.5rem;
+}
