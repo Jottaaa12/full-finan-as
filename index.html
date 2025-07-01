@@ -89,9 +89,14 @@
                     <li><a href="#" class="nav-link" data-page="goals"><i class="fas fa-flag-checkered"></i> Objetivos</a></li>
                     <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
                     <li><a href="#" class="nav-link" data-page="tools"><i class="fas fa-tools"></i> Ferramentas</a></li>
+                    <li><a href="#" class="nav-link" data-page="profile"><i class="fas fa-user-cog"></i> Perfil</a></li>
+                    <li><a href="#" class="nav-link" data-page="support"><i class="fas fa-heart"></i> Apoie o Projeto</a></li>
                 </ul>
                 <div class="sidebar-footer">
                     <div id="user-info" class="user-info">
+                        <div class="user-photo">
+                            <img id="sidebar-user-photo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='30' fill='%2394a3b8'>👤</text></svg>" alt="Foto do Usuário">
+                        </div>
                         <span id="user-name-display"></span>
                     </div>
                     <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
@@ -147,7 +152,10 @@
                     <h2>Extrato de Transações</h2>
                     <div class="actions-bar">
                         <button id="add-transaction-btn" class="btn-primary"><i class="fas fa-plus"></i> Nova Transação</button>
-                        <!-- Filtros -->
+                        <div class="export-buttons">
+                            <button id="export-excel-btn" class="btn-secondary"><i class="fas fa-file-excel"></i> Exportar para Excel (.xlsx)</button>
+                            <button id="export-pdf-btn" class="btn-secondary"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table id="transactions-table">
@@ -213,8 +221,262 @@
                     </div>
                 </section>
 
-                <section id="reports-page" class="page hidden"><h2>Relatórios e Gráficos</h2><!-- Conteúdo aqui --></section>
-                <section id="tools-page" class="page hidden"><h2>Ferramentas Financeiras</h2><!-- Conteúdo aqui --></section>
+                <section id="reports-page" class="page hidden">
+                    <h2>Relatórios e Gráficos</h2>
+                    
+                    <!-- Filtros de Período -->
+                    <div class="reports-filters">
+                        <label for="period-filter">Período:</label>
+                        <select id="period-filter" class="period-select">
+                            <option value="current-month">Este Mês</option>
+                            <option value="last-month">Mês Passado</option>
+                            <option value="current-year">Este Ano</option>
+                            <option value="last-3-months">Últimos 3 Meses</option>
+                            <option value="last-6-months">Últimos 6 Meses</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Área do Gráfico -->
+                    <div class="reports-chart-container">
+                        <h3>Despesas por Categoria</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="reports-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Área da Tabela de Resumo -->
+                    <div class="reports-summary">
+                        <h3>Resumo de Gastos</h3>
+                        <div class="summary-table-container">
+                            <table id="summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Categoria</th>
+                                        <th>Valor Total</th>
+                                        <th>Percentual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dados serão inseridos via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                <section id="tools-page" class="page hidden">
+                    <h2>Ferramentas Financeiras</h2>
+                    
+                    <!-- Calculadora de Juros Compostos -->
+                    <div class="tools-card">
+                        <h3><i class="fas fa-calculator"></i> Calculadora de Juros Compostos</h3>
+                        <p class="tools-description">Calcule o crescimento do seu investimento com juros compostos e aportes mensais.</p>
+                        
+                        <form id="compound-interest-form" class="calculator-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="initial-amount">Valor Inicial (R$)</label>
+                                    <input type="number" id="initial-amount" step="0.01" min="0" placeholder="0,00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="monthly-contribution">Aporte Mensal (R$)</label>
+                                    <input type="number" id="monthly-contribution" step="0.01" min="0" placeholder="0,00" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="interest-rate">Taxa de Juros (% ao ano)</label>
+                                    <input type="number" id="interest-rate" step="0.01" min="0" max="100" placeholder="0,00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="period-years">Período (em anos)</label>
+                                    <input type="number" id="period-years" step="0.1" min="0.1" max="100" placeholder="0" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary calculator-btn">
+                                <i class="fas fa-calculator"></i> Calcular
+                            </button>
+                        </form>
+                        
+                        <div id="calculator-results" class="calculator-results hidden">
+                            <h4>Resultados do Investimento</h4>
+                            <div class="results-grid">
+                                <div class="result-item">
+                                    <span class="result-label">Valor Total Investido:</span>
+                                    <span id="total-invested" class="result-value"></span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="result-label">Total em Juros:</span>
+                                    <span id="total-interest" class="result-value interest"></span>
+                                </div>
+                                <div class="result-item highlight">
+                                    <span class="result-label">Valor Final Acumulado:</span>
+                                    <span id="final-amount" class="result-value final"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção de Perfil do Usuário -->
+                <section id="profile-page" class="page hidden">
+                    <h2><i class="fas fa-user-cog"></i> Meu Perfil</h2>
+                    
+                    <!-- Seção de Informações Pessoais -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-user"></i> Informações Pessoais</h3>
+                        <div class="profile-card">
+                            <form id="profile-form" class="profile-form">
+                                <div class="form-group">
+                                    <label for="profile-email">Email</label>
+                                    <input type="email" id="profile-email" readonly>
+                                    <small>O email não pode ser alterado</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-name">Nome Completo</label>
+                                    <input type="text" id="profile-name" placeholder="Seu nome completo" required>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Alterações
+                                </button>
+                            </form>
+                            <div id="profile-message" class="profile-message hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Segurança -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-shield-alt"></i> Segurança</h3>
+                        <div class="profile-card">
+                            <form id="password-form" class="profile-form">
+                                <div class="form-group">
+                                    <label for="current-password">Senha Atual</label>
+                                    <input type="password" id="current-password" placeholder="Digite sua senha atual" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-password">Nova Senha</label>
+                                    <input type="password" id="new-password" placeholder="Digite a nova senha" required minlength="6">
+                                    <small>Mínimo 6 caracteres</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm-password">Confirmar Nova Senha</label>
+                                    <input type="password" id="confirm-password" placeholder="Confirme a nova senha" required minlength="6">
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-key"></i> Alterar Senha
+                                </button>
+                            </form>
+                            <div id="password-message" class="profile-message hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção de Aparência e Personalização -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-palette"></i> Aparência e Personalização</h3>
+                        <div class="profile-card">
+                            <div class="profile-photo-section">
+                                <h4>Foto de Perfil</h4>
+                                <div class="photo-upload-area">
+                                    <div class="current-photo">
+                                        <img id="profile-photo-preview" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='30' fill='%2394a3b8'>👤</text></svg>" alt="Foto de Perfil">
+                                    </div>
+                                    <div class="photo-upload-controls">
+                                        <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
+                                        <button type="button" id="change-photo-btn" class="btn-secondary">
+                                            <i class="fas fa-camera"></i> Alterar Foto
+                                        </button>
+                                        <button type="button" id="remove-photo-btn" class="btn-danger hidden">
+                                            <i class="fas fa-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                    <div id="photo-upload-progress" class="upload-progress hidden">
+                                        <div class="spinner"></div>
+                                        <span>Enviando foto...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="currency-section">
+                                <h4>Moeda Padrão</h4>
+                                <div class="form-group">
+                                    <label for="default-currency">Moeda Principal</label>
+                                    <select id="default-currency" class="currency-select">
+                                        <option value="BRL">Real Brasileiro (R$)</option>
+                                        <option value="USD">Dólar Americano ($)</option>
+                                        <option value="EUR">Euro (€)</option>
+                                    </select>
+                                    <small>Esta será a moeda exibida em toda a aplicação.</small>
+                                </div>
+                            </div>
+                            
+                            <div id="personalization-message" class="profile-message hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seção Zona de Perigo -->
+                    <div class="profile-section danger-zone">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Zona de Perigo</h3>
+                        <div class="profile-card danger-card">
+                            <div class="danger-warning">
+                                <h4>⚠️ Ações Destrutivas</h4>
+                                <p>As ações nesta seção são <strong>irreversíveis</strong> e resultarão na perda permanente de todos os seus dados.</p>
+                            </div>
+                            
+                            <div class="danger-actions">
+                                <button type="button" id="delete-account-btn" class="btn-danger-large">
+                                    <i class="fas fa-trash-alt"></i> Deletar minha conta permanentemente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção Apoie o Projeto -->
+                <section id="support-page" class="page hidden">
+                    <h2><i class="fas fa-heart"></i> Apoie o Desenvolvimento do Full Finanças</h2>
+                    
+                    <div class="support-card">
+                        <div class="support-header">
+                            <h3>❤️ Obrigado por usar o Full Finanças!</h3>
+                            <p>Este projeto é desenvolvido com muito amor e dedicação para ajudar você a ter controle total das suas finanças. Se você gostou do projeto e quer apoiar seu desenvolvimento contínuo, considere fazer uma doação.</p>
+                        </div>
+                        
+                        <div class="support-content">
+                            <div class="pix-info">
+                                <h4><i class="fas fa-qrcode"></i> Doação via PIX</h4>
+                                <div class="pix-details">
+                                    <div class="pix-field">
+                                        <label>Nome:</label>
+                                        <span>João Pedro Carvalho Torres</span>
+                                    </div>
+                                    <div class="pix-field">
+                                        <label>Chave PIX:</label>
+                                        <div class="pix-key-container">
+                                            <span id="pix-key">88988229312</span>
+                                            <button id="copy-pix-btn" class="btn-copy">
+                                                <i class="fas fa-copy"></i> Copiar Chave
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="copy-message" class="copy-message hidden">
+                                    <i class="fas fa-check"></i> Chave copiada!
+                                </div>
+                            </div>
+                            
+                            <div class="support-message">
+                                <h4>🎯 Como sua doação ajuda:</h4>
+                                <ul>
+                                    <li>• Desenvolvimento de novas funcionalidades</li>
+                                    <li>• Melhorias na interface e experiência do usuário</li>
+                                    <li>• Manutenção e atualizações de segurança</li>
+                                    <li>• Hospedagem e infraestrutura do projeto</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
@@ -269,6 +531,53 @@
                     <input type="checkbox" id="transaction-paid">
                     <label for="transaction-paid">Pago/Recebido</label>
                 </div>
+                
+                <div class="form-group">
+                    <label for="transaction-attachment">Anexar Comprovante (Opcional)</label>
+                    <input type="file" id="transaction-attachment" accept="image/*,.pdf" class="file-input">
+                    <small>Aceita imagens (JPG, PNG, GIF) e PDFs. Máximo 5MB.</small>
+                    <div id="upload-progress" class="upload-progress">
+                        <div class="spinner"></div>
+                        <span>Enviando comprovante...</span>
+                    </div>
+                </div>
+                
+                <!-- Seção de Recorrência -->
+                <div class="form-group form-group-checkbox">
+                    <input type="checkbox" id="transaction-recurring">
+                    <label for="transaction-recurring">Repetir esta transação</label>
+                </div>
+                
+                <div id="recurrence-options" class="recurrence-options hidden">
+                    <div class="form-group">
+                        <label>Tipo de Recorrência:</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="recurrence-type" value="monthly" checked>
+                                <span>Fixo Mensal</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="recurrence-type" value="installment">
+                                <span>Parcelado</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="monthly-options" class="recurrence-field">
+                        <div class="form-group">
+                            <label for="recurrence-months">Durante quantos meses?</label>
+                            <input type="number" id="recurrence-months" min="2" max="60" placeholder="Ex: 12">
+                        </div>
+                    </div>
+                    
+                    <div id="installment-options" class="recurrence-field hidden">
+                        <div class="form-group">
+                            <label for="recurrence-installments">Número total de parcelas</label>
+                            <input type="number" id="recurrence-installments" min="2" max="60" placeholder="Ex: 12">
+                        </div>
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn-primary">Salvar</button>
             </form>
         </div>
@@ -368,8 +677,82 @@
         </div>
     </div>
 
+    <!-- Modal para Pagamento de Fatura -->
+    <div id="payment-modal" class="modal-container hidden">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="payment-modal-title">Pagamento de Fatura</h3>
+            <form id="payment-form">
+                <input type="hidden" id="payment-card-id">
+                <div class="form-group">
+                    <label for="payment-card-name">Cartão</label>
+                    <input type="text" id="payment-card-name" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="payment-amount">Valor a Pagar</label>
+                    <input type="number" step="0.01" id="payment-amount" placeholder="R$ 0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="payment-source-account">Conta de Origem</label>
+                    <select id="payment-source-account" required>
+                        <option value="">Selecione uma conta</option>
+                        <!-- Opções de conta carregadas via JS -->
+                    </select>
+                    <small>Escolha a conta de onde sairá o dinheiro para pagar a fatura.</small>
+                </div>
+                <button type="submit" class="btn-primary">Confirmar Pagamento</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Conta -->
+    <div id="delete-account-modal" class="modal-container hidden">
+        <div class="modal-content delete-account-modal">
+            <button class="modal-close-btn">&times;</button>
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão de Conta</h3>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <h4>⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!</h4>
+                    <p>A exclusão da sua conta resultará na perda <strong>permanente</strong> de todos os seus dados:</p>
+                    <ul>
+                        <li>• Todas as suas contas bancárias</li>
+                        <li>• Todas as transações (receitas e despesas)</li>
+                        <li>• Todos os orçamentos e metas</li>
+                        <li>• Todos os cartões de crédito</li>
+                        <li>• Todos os comprovantes anexados</li>
+                        <li>• Sua foto de perfil</li>
+                        <li>• Todas as configurações personalizadas</li>
+                    </ul>
+                    <p><strong>Esta ação não pode ser desfeita.</strong></p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm-email">Para confirmar, digite seu email:</label>
+                    <input type="email" id="confirm-email" placeholder="Digite seu email completo" required>
+                    <small>Você deve digitar exatamente: <strong id="user-email-display"></strong></small>
+                </div>
+                
+                <div class="delete-progress hidden">
+                    <div class="spinner"></div>
+                    <span>Excluindo sua conta e todos os dados...</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal(deleteAccountModal)">Cancelar</button>
+                <button type="button" id="confirm-delete-btn" class="btn-danger-large" disabled>
+                    <i class="fas fa-trash-alt"></i> Eu entendo as consequências, deletar minha conta
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts JS -->
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Rodapé BETA -->
+    <footer class="beta-footer">
+        <span>Full Finanças - Projeto em Desenvolvimento (BETA 1)</span>
+    </footer>
 </body>
 </html>
