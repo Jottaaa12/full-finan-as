@@ -219,6 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.remove('open');
             sidebarOverlay.classList.add('hidden');
         });
+
+        // Fecha o menu quando a tela é redimensionada para desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.add('hidden');
+            }
+        });
     }
 
     navLinks.forEach(link => {
