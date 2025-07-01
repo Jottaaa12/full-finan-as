@@ -231,6 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         loader.classList.add('hidden');
         appContainer.classList.remove('hidden');
+        // Tour guiado
+        if (userData.hasCompletedTour === false) {
+            setTimeout(() => startTour(), 800);
+        }
     }
     
     async function fetchAllData() {
@@ -292,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.createUserWithEmailAndPassword(email, password)
             .then(userCredential => {
                 return db.collection('users').doc(userCredential.user.uid).set({
-                    name: name, email: email, createdAt: firebase.firestore.FieldValue.serverTimestamp(), currency: 'BRL'
+                    name: name, email: email, createdAt: firebase.firestore.FieldValue.serverTimestamp(), currency: 'BRL', hasCompletedTour: false
                 });
             })
             .catch(error => { authError.textContent = getAuthErrorMessage(error.code); });
@@ -527,40 +531,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
             showPersonalizationMessage('A foto é muito grande. Tamanho máximo: 5MB', 'error');
+            profilePhotoInput.value = '';
             return;
         }
-
         if (!file.type.startsWith('image/')) {
             showPersonalizationMessage('Por favor, selecione apenas arquivos de imagem.', 'error');
+            profilePhotoInput.value = '';
             return;
         }
 
+        // Prévia imediata
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            profilePhotoPreview.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Desabilitar interface
+        changePhotoBtn.disabled = true;
+        profileForm.querySelector('button[type="submit"]').disabled = true;
+        photoUploadProgress.classList.remove('hidden');
+        showPersonalizationMessage('Enviando foto...', 'success');
+
         try {
-            // Mostrar progresso
-            photoUploadProgress.classList.remove('hidden');
-            changePhotoBtn.disabled = true;
-
-            // Upload da foto
-            const photoURL = await uploadProfilePhoto(file);
-
-            // Atualizar no Firestore
-            await db.collection('users').doc(currentUser.uid).update({
+            // Caminho seguro: profile_pictures/{userId}/profile.jpg
+            const userId = currentUser.uid;
+            const storageRef = storage.ref().child(`profile_pictures/${userId}/profile.jpg`);
+            // Upload seguro
+            const uploadTask = storageRef.put(file);
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed', null, reject, resolve);
+            });
+            // Obter URL
+            const photoURL = await storageRef.getDownloadURL();
+            // Salvar no Firestore
+            await db.collection('users').doc(userId).update({
                 profilePhotoURL: photoURL
             });
-
-            // Atualizar previews
+            // Atualizar interface
             profilePhotoPreview.src = photoURL;
             sidebarUserPhoto.src = photoURL;
             removePhotoBtn.classList.remove('hidden');
-
-            showPersonalizationMessage('Foto de perfil atualizada com sucesso!', 'success');
-
+            showPersonalizationMessage('Foto de perfil atualizada!', 'success');
         } catch (error) {
-            console.error('Erro ao fazer upload da foto:', error);
-            showPersonalizationMessage('Erro ao fazer upload da foto. Tente novamente.', 'error');
+            console.error('Erro ao enviar a foto de perfil:', error);
+            showPersonalizationMessage('Erro ao enviar a foto. Verifique o tamanho do arquivo e sua conexão.', 'error');
+            // Reverter prévia para anterior se possível
+            loadProfileData();
         } finally {
-            photoUploadProgress.classList.add('hidden');
             changePhotoBtn.disabled = false;
+            profileForm.querySelector('button[type="submit"]').disabled = false;
+            photoUploadProgress.classList.add('hidden');
             profilePhotoInput.value = '';
         }
     });
@@ -2023,5 +2044,118 @@ document.addEventListener('DOMContentLoaded', () => {
             style: 'currency', 
             currency: currencyConfig.currency 
         });
+    }
+
+    // --- TOUR GUIADO PARA NOVOS USUÁRIOS ---
+    const tourSteps = [
+        {
+            element: '.sidebar',
+            title: 'Navegação Principal',
+            text: 'Aqui você encontra todas as seções do sistema. Vamos conhecer as principais?'
+        },
+        {
+            element: 'a[data-page="accounts"]',
+            title: 'Suas Contas',
+            text: 'O primeiro passo é cadastrar suas contas (conta corrente, carteira, poupança). É aqui que seu dinheiro entra e sai.'
+        },
+        {
+            element: 'a[data-page="transactions"]',
+            title: 'Transações',
+            text: 'Aqui você visualiza, adiciona e gerencia todas as suas receitas e despesas.'
+        },
+        {
+            element: 'a[data-page="cards"]',
+            title: 'Cartões de Crédito',
+            text: 'Gerencie seus cartões, faturas e pagamentos de forma centralizada.'
+        },
+        {
+            element: 'a[data-page="budgets"]',
+            title: 'Orçamentos',
+            text: 'Defina limites de gastos por categoria e acompanhe seu progresso mensal.'
+        },
+        {
+            element: 'a[data-page="goals"]',
+            title: 'Metas e Objetivos',
+            text: 'Crie objetivos financeiros e acompanhe seu avanço até conquistá-los.'
+        },
+        {
+            element: 'a[data-page="reports"]',
+            title: 'Relatórios',
+            text: 'Visualize gráficos e relatórios detalhados para entender melhor suas finanças.'
+        },
+        {
+            element: '.dashboard-grid',
+            title: 'Dashboard',
+            text: 'Aqui está o resumo financeiro, gráficos e suas transações recentes.'
+        }
+    ];
+
+    let currentTourStep = 0;
+    let tourActive = false;
+
+    function startTour() {
+        tourActive = true;
+        document.getElementById('tour-overlay').classList.remove('hidden');
+        document.getElementById('tour-tooltip').classList.remove('hidden');
+        showTourStep(0);
+    }
+
+    function showTourStep(stepIndex) {
+        // Remover destaque anterior
+        document.querySelectorAll('.highlight-tour').forEach(el => el.classList.remove('highlight-tour'));
+        currentTourStep = stepIndex;
+        const step = tourSteps[stepIndex];
+        const el = document.querySelector(step.element);
+        if (!el) {
+            document.getElementById('tour-tooltip').style.top = '20vh';
+            document.getElementById('tour-tooltip').style.left = '50vw';
+        } else {
+            // Destacar elemento
+            el.classList.add('highlight-tour');
+            // Calcular posição do tooltip
+            const rect = el.getBoundingClientRect();
+            const tooltip = document.getElementById('tour-tooltip');
+            const scrollY = window.scrollY || window.pageYOffset;
+            let top = rect.bottom + scrollY + 16;
+            let left = rect.left + (rect.width / 2) - 160;
+            if (window.innerWidth < 400) left = 10;
+            if (top + 220 > window.innerHeight + scrollY) top = rect.top + scrollY - 220;
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${Math.max(left, 10)}px`;
+        }
+        document.getElementById('tour-title').textContent = step.title;
+        document.getElementById('tour-text').textContent = step.text;
+        document.getElementById('tour-prev-btn').disabled = stepIndex === 0;
+        document.getElementById('tour-next-btn').textContent = (stepIndex === tourSteps.length - 1) ? 'Finalizar' : 'Próximo';
+    }
+
+    function endTour() {
+        tourActive = false;
+        document.getElementById('tour-overlay').classList.add('hidden');
+        document.getElementById('tour-tooltip').classList.add('hidden');
+        document.querySelectorAll('.highlight-tour').forEach(el => el.classList.remove('highlight-tour'));
+        // Atualizar no Firestore
+        if (currentUser) {
+            db.collection('users').doc(currentUser.uid).update({ hasCompletedTour: true });
+        }
+    }
+
+    // Eventos de navegação do tour
+    if (document.getElementById('tour-prev-btn')) {
+        document.getElementById('tour-prev-btn').onclick = () => {
+            if (currentTourStep > 0) showTourStep(currentTourStep - 1);
+        };
+    }
+    if (document.getElementById('tour-next-btn')) {
+        document.getElementById('tour-next-btn').onclick = () => {
+            if (currentTourStep < tourSteps.length - 1) {
+                showTourStep(currentTourStep + 1);
+            } else {
+                endTour();
+            }
+        };
+    }
+    if (document.getElementById('tour-close-btn')) {
+        document.getElementById('tour-close-btn').onclick = () => endTour();
     }
 });
