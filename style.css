@@ -407,6 +407,14 @@ a:hover {
     box-shadow: var(--shadow);
 }
 
+/* Contêiner do gráfico principal */
+#main-chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin-top: 1rem;
+}
+
 .list-container h3, .chart-container h3 {
     margin-bottom: 1rem;
     font-size: 1.1rem;
@@ -1861,7 +1869,7 @@ a:hover {
     .page-content {
         margin-left: 0;
         padding: 1rem;
-        padding-top: 6.5rem; /* Espaço para o header e botão - CORRIGIDO */
+        padding-top: 7rem; /* Espaço aumentado para o header e botão - CORREÇÃO DEFINITIVA */
         padding-bottom: 60px; /* Espaço para o rodapé BETA */
     }
     
@@ -1895,6 +1903,10 @@ a:hover {
     .chart-container {
         min-height: 250px;
         max-height: 300px;
+    }
+    
+    #main-chart-container {
+        height: 250px; /* Altura reduzida para mobile */
     }
     
     .accounts-grid, .credit-cards-grid, .budgets-grid, .goals-grid {
