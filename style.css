@@ -1901,3 +1901,88 @@ a:hover {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* --- Tour Guiado para Novos Usuários --- */
+.tour-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    z-index: 99998;
+    transition: opacity 0.3s;
+}
+.tour-tooltip {
+    position: absolute;
+    min-width: 280px;
+    max-width: 350px;
+    background: #fff;
+    color: #222;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    font-size: 1rem;
+    animation: fadeIn 0.3s;
+}
+.tour-tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+.tour-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+    margin-left: 1rem;
+}
+.tour-tooltip-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.tour-nav-btn {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.tour-nav-btn:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+.tour-tooltip-text {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+.highlight-tour {
+    position: relative !important;
+    z-index: 100000 !important;
+    box-shadow: 0 0 0 4px var(--primary-color), 0 8px 32px rgba(124,58,237,0.15);
+    border-radius: 10px !important;
+    transition: box-shadow 0.2s;
+    outline: 2px solid var(--primary-color);
+}
+@media (max-width: 600px) {
+    .tour-tooltip {
+        min-width: 90vw;
+        max-width: 98vw;
+        font-size: 0.95rem;
+        padding: 1rem 0.5rem;
+    }
+}
