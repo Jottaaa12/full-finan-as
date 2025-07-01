@@ -89,10 +89,15 @@
                     <li><a href="#" class="nav-link" data-page="goals"><i class="fas fa-flag-checkered"></i> Objetivos</a></li>
                     <li><a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-bar"></i> Relatórios</a></li>
                     <li><a href="#" class="nav-link" data-page="tools"><i class="fas fa-tools"></i> Ferramentas</a></li>
+                    <li><a href="#" class="nav-link" data-page="feedback"><i class="fas fa-comment-dots"></i> Relatar Problema</a></li>
                     <li><a href="#" class="nav-link" data-page="profile"><i class="fas fa-user-cog"></i> Perfil</a></li>
                     <li><a href="#" class="nav-link" data-page="support"><i class="fas fa-heart"></i> Apoie o Projeto</a></li>
+                    <li><a href="#" class="nav-link" data-page="payables"><i class="fas fa-calendar-alt"></i> Contas a Pagar</a></li>
                 </ul>
                 <div class="sidebar-footer">
+                    <a href="./admin/" id="admin-panel-link" class="btn-admin hidden">
+                        <i class="fas fa-user-shield"></i> Painel Admin
+                    </a>
                     <div id="user-info" class="user-info">
                         <div class="user-photo">
                             <img id="sidebar-user-photo" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='30' fill='%2394a3b8'>👤</text></svg>" alt="Foto do Usuário">
@@ -119,6 +124,13 @@
                         <div class="card"><div class="card-icon income"><i class="fas fa-arrow-up"></i></div><div class="card-content"><h3>Receitas do Mês</h3><p id="monthly-income">R$ 0,00</p></div></div>
                         <div class="card"><div class="card-icon expense"><i class="fas fa-arrow-down"></i></div><div class="card-content"><h3>Despesas do Mês</h3><p id="monthly-expenses">R$ 0,00</p></div></div>
                         <div class="card"><div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div><div class="card-content"><h3>Economia do Mês</h3><p id="monthly-savings">R$ 0,00</p></div></div>
+                        <div class="card" id="payables-alert-card">
+                            <div class="card-icon" style="background: var(--warning-color, #f59e0b);"><i class="fas fa-exclamation-circle"></i></div>
+                            <div class="card-content">
+                                <h3>Próximos Vencimentos</h3>
+                                <ul id="payables-alert-list" class="payables-alert-list"></ul>
+                            </div>
+                        </div>
                     </div>
                     <!-- Gráficos e Listas -->
                     <div class="dashboard-grid">
@@ -247,6 +259,22 @@
                         </div>
                     </div>
                     
+                    <!-- Projeção de Fluxo de Caixa -->
+                    <div class="reports-chart-container" id="cashflow-projection-card">
+                        <h3>Projeção de Fluxo de Caixa</h3>
+                        <div class="cashflow-projection-filters">
+                            <label for="cashflow-projection-period">Período:</label>
+                            <select id="cashflow-projection-period" class="period-select">
+                                <option value="30">Próximos 30 dias</option>
+                                <option value="60">Próximos 60 dias</option>
+                                <option value="90">Próximos 90 dias</option>
+                            </select>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="cashflow-projection-chart"></canvas>
+                        </div>
+                    </div>
+                    
                     <!-- Área da Tabela de Resumo -->
                     <div class="reports-summary">
                         <h3>Resumo de Gastos</h3>
@@ -317,6 +345,27 @@
                                     <span class="result-label">Valor Final Acumulado:</span>
                                     <span id="final-amount" class="result-value final"></span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Conciliação Bancária -->
+                    <div class="tools-card" id="bank-reconciliation-card">
+                        <h3><i class="fas fa-file-csv"></i> Conciliação Bancária</h3>
+                        <p class="tools-description">Faça upload do extrato bancário (.csv) e compare com suas transações já lançadas.</p>
+                        <div class="reconciliation-upload-area">
+                            <input type="file" id="reconciliation-csv-input" accept=".csv" class="hidden">
+                            <label for="reconciliation-csv-input" class="btn-secondary reconciliation-upload-label"><i class="fas fa-upload"></i> Selecionar Extrato CSV</label>
+                            <span id="reconciliation-file-name" class="file-name"></span>
+                            <button id="reconciliation-process-btn" class="btn-primary" disabled><i class="fas fa-search"></i> Processar Extrato</button>
+                        </div>
+                        <div id="reconciliation-results" class="reconciliation-results hidden">
+                            <div class="reconciliation-section">
+                                <h4>Transações a serem Lançadas</h4>
+                                <ul id="reconciliation-to-launch-list" class="reconciliation-list"></ul>
+                            </div>
+                            <div class="reconciliation-section">
+                                <h4>Transações já Conciliadas</h4>
+                                <div id="reconciliation-matched-info" class="matched-info"></div>
                             </div>
                         </div>
                     </div>
@@ -478,6 +527,55 @@
                                 </ul>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Seção de Contas a Pagar -->
+                <section id="payables-page" class="page hidden">
+                    <h2>Contas a Pagar/Receber</h2>
+                    <div class="tabs payables-tabs">
+                        <button class="tab-btn active" data-tab="overdue">Vencidas</button>
+                        <button class="tab-btn" data-tab="today">Vencendo Hoje</button>
+                        <button class="tab-btn" data-tab="next7">Próximos 7 Dias</button>
+                        <button class="tab-btn" data-tab="next30">Próximos 30 Dias</button>
+                    </div>
+                    <div class="tab-content" id="overdue-tab">
+                        <ul id="payables-overdue-list" class="payables-list"></ul>
+                    </div>
+                    <div class="tab-content hidden" id="today-tab">
+                        <ul id="payables-today-list" class="payables-list"></ul>
+                    </div>
+                    <div class="tab-content hidden" id="next7-tab">
+                        <ul id="payables-next7-list" class="payables-list"></ul>
+                    </div>
+                    <div class="tab-content hidden" id="next30-tab">
+                        <ul id="payables-next30-list" class="payables-list"></ul>
+                    </div>
+                </section>
+
+                <!-- Seção de Feedback -->
+                <section id="feedback-page" class="page hidden">
+                    <h2>Relatar um Problema ou Sugestão</h2>
+                    <div class="card-large" style="max-width: 800px; margin: auto;">
+                        <p style="margin-bottom: 1.5rem;">Sua opinião é fundamental para melhorar o Full Finanças! Use o formulário abaixo para nos enviar uma sugestão ou relatar um bug que você encontrou.</p>
+                        <form id="feedback-form">
+                            <div class="form-group">
+                                <label for="feedback-type">Tipo de Feedback</label>
+                                <select id="feedback-type" required>
+                                    <option value="sugestao">Sugestão de Melhoria</option>
+                                    <option value="bug">Relato de Bug</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="feedback-subject">Assunto</label>
+                                <input type="text" id="feedback-subject" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="feedback-description">Descrição</label>
+                                <textarea id="feedback-description" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Enviar Feedback</button>
+                        </form>
                     </div>
                 </section>
             </main>
