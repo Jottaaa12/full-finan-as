@@ -236,19 +236,28 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchAllData() {
         if (!currentUser) return;
         
-        const accountsSnapshot = await db.collection('accounts').where('userId', '==', currentUser.uid).get();
-        userAccounts = accountsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+            // Otimização: Fazer todas as queries em paralelo
+            const [accountsSnapshot, transactionsSnapshot, budgetsSnapshot, goalsSnapshot] = await Promise.all([
+                db.collection('accounts').where('userId', '==', currentUser.uid).get(),
+                db.collection('transactions').where('userId', '==', currentUser.uid).get(),
+                db.collection('budgets').where('userId', '==', currentUser.uid).get(),
+                db.collection('goals').where('userId', '==', currentUser.uid).get()
+            ]);
 
-        const transactionsSnapshot = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
-        userTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Mapear dados
+            userAccounts = accountsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            userTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            userBudgets = budgetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            userGoals = goalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        const budgetsSnapshot = await db.collection('budgets').where('userId', '==', currentUser.uid).get();
-        userBudgets = budgetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const goalsSnapshot = await db.collection('goals').where('userId', '==', currentUser.uid).get();
-        userGoals = goalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        calculateAllBalances();
+            // Calcular saldos
+            calculateAllBalances();
+            
+        } catch (error) {
+            console.error('Erro ao buscar dados:', error);
+            // Em caso de erro, manter dados existentes se houver
+        }
     }
     
     function calculateAllBalances() {
@@ -358,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'goals': loadGoalsData(); break;
             case 'reports': loadReportsData(); break;
             case 'profile': loadProfileData(); break;
+            case 'support': /* Página de suporte não precisa carregar dados */ break;
         }
     }
     
@@ -1597,35 +1607,76 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function loadDashboardData() {
         if (!currentUser) return;
+        
+        // Verificar se os elementos existem antes de tentar acessá-los
+        if (!totalBalanceEl || !monthlyIncomeEl || !monthlyExpensesEl || !monthlySavingsEl || !recentTransactionsList) {
+            console.warn('Elementos do dashboard não encontrados');
+            return;
+        }
+        
+        // Otimização: Calcular saldo total uma única vez
         const totalBalance = userAccounts
             .filter(acc => acc.type !== 'cartao_credito')
             .reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
         totalBalanceEl.textContent = formatCurrency(totalBalance);
         
+        // Otimização: Calcular dados mensais uma única vez
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        
         let monthlyIncome = 0, monthlyExpenses = 0;
+        
+        // Processar transações do mês atual
         userTransactions.forEach(t => {
             const transactionDate = t.date.toDate();
-            if (transactionDate >= startOfMonth) {
-                if (t.type === 'receita') monthlyIncome += t.amount;
-                else if (t.type === 'despesa') monthlyExpenses += t.amount;
+            const transactionMonthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (transactionMonthKey === currentMonthKey) {
+                if (t.type === 'receita') {
+                    monthlyIncome += t.amount;
+                } else if (t.type === 'despesa') {
+                    monthlyExpenses += t.amount;
+                }
             }
         });
+        
+        // Atualizar elementos do dashboard
         monthlyIncomeEl.textContent = formatCurrency(monthlyIncome);
         monthlyExpensesEl.textContent = formatCurrency(monthlyExpenses);
         monthlySavingsEl.textContent = formatCurrency(monthlyIncome - monthlyExpenses);
         
+        // Otimização: Renderizar transações recentes
         recentTransactionsList.innerHTML = '';
-        const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
-        sortedTransactions.slice(0, 5).forEach(t => {
+        const sortedTransactions = [...userTransactions]
+            .sort((a, b) => b.date.seconds - a.date.seconds)
+            .slice(0, 5);
+            
+        sortedTransactions.forEach(t => {
             const li = document.createElement('li');
-            li.innerHTML = `<span><i class="fas ${t.type === 'receita' ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};"></i> ${t.description}</span><strong>${formatCurrency(t.amount)}</strong>`;
+            const iconClass = t.type === 'receita' ? 'fa-arrow-up' : 'fa-arrow-down';
+            const iconColor = t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)';
+            
+            li.innerHTML = `
+                <span>
+                    <i class="fas ${iconClass}" style="color: ${iconColor};"></i> 
+                    ${t.description}
+                </span>
+                <strong>${formatCurrency(t.amount)}</strong>
+            `;
             recentTransactionsList.appendChild(li);
         });
 
+        // Renderizar componentes do dashboard
         renderBudgetsOverview();
-        renderMainChart();
+        
+        // Renderizar gráfico com debounce para evitar múltiplas chamadas
+        if (window.dashboardChartTimeout) {
+            clearTimeout(window.dashboardChartTimeout);
+        }
+        window.dashboardChartTimeout = setTimeout(() => {
+            renderMainChart();
+        }, 100);
     }
 
     function renderBudgetsOverview() {
@@ -1660,44 +1711,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderMainChart() {
-        if (!currentUser) return;
+        if (!currentUser || !mainChartCanvas) return;
+        
+        // Otimização: Pré-processar dados uma única vez
+        const monthlyData = new Map();
+        
+        // Processar todas as transações uma única vez
+        userTransactions.forEach(t => {
+            const transactionDate = t.date.toDate();
+            const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyData.has(monthKey)) {
+                monthlyData.set(monthKey, { income: 0, expense: 0 });
+            }
+            
+            const monthData = monthlyData.get(monthKey);
+            if (t.type === 'receita') {
+                monthData.income += t.amount;
+            } else if (t.type === 'despesa') {
+                monthData.expense += t.amount;
+            }
+        });
+        
+        // Gerar dados para os últimos 6 meses
         const labels = [];
         const incomeData = [];
         const expenseData = [];
+        
         for (let i = 5; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             const month = d.toLocaleString('pt-BR', { month: 'short' });
             const year = d.getFullYear();
             labels.push(`${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`);
-            const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
-            const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-            let income = 0;
-            let expense = 0;
-            userTransactions.forEach(t => {
-                const transactionDate = t.date.toDate();
-                if (transactionDate >= startOfMonth && transactionDate <= endOfMonth) {
-                    if (t.type === 'receita') income += t.amount;
-                    if (t.type === 'despesa') expense += t.amount;
-                }
-            });
-            incomeData.push(income);
-            expenseData.push(expense);
+            
+            const monthKey = `${year}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const monthData = monthlyData.get(monthKey) || { income: 0, expense: 0 };
+            
+            incomeData.push(monthData.income);
+            expenseData.push(monthData.expense);
         }
-        if (mainChart) { mainChart.destroy(); }
+        
+        // Destruir gráfico anterior se existir
+        if (mainChart) {
+            mainChart.destroy();
+        }
+        
+        // Criar novo gráfico com configurações otimizadas
         mainChart = new Chart(mainChartCanvas, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Receitas', data: incomeData,
-                    backgroundColor: 'rgba(16, 185, 129, 0.6)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1
+                    label: 'Receitas',
+                    data: incomeData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1
                 }, {
-                    label: 'Despesas', data: expenseData,
-                    backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1
+                    label: 'Despesas',
+                    data: expenseData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 1
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 500 // Reduzir duração da animação
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -1879,8 +1981,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadTransactionsData() {
         if (!currentUser) return;
-        transactionsTableBody.innerHTML = '';
+        
+        // Otimização: Usar DocumentFragment para manipulação eficiente do DOM
+        const fragment = document.createDocumentFragment();
         const sortedTransactions = [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds);
+        
         sortedTransactions.forEach(t => {
             const accountName = userAccounts.find(acc => acc.id === t.accountId)?.name || 'N/A';
             const tr = document.createElement('tr');
@@ -1889,8 +1994,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${accountName}</td> <td style="color: ${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};">${formatCurrency(t.amount)}</td>
                 <td>${t.isPaid ? 'Pago' : 'Pendente'}</td> <td><!-- Ações --></td>
             `;
-            transactionsTableBody.appendChild(tr);
+            fragment.appendChild(tr);
         });
+        
+        // Limpar e adicionar todos os elementos de uma vez
+        transactionsTableBody.innerHTML = '';
+        transactionsTableBody.appendChild(fragment);
     }
 
     // --- FUNÇÕES UTILITÁRIAS ---
