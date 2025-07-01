@@ -1,12 +1,25 @@
 // =============================================================================
 // SCRIPT PRINCIPAL DA APLICAÇÃO - Full Finanças
 // =============================================================================
-// Este arquivo contém toda a lógica da aplicação, incluindo:
-// 1. Gerenciamento de estado da autenticação (login, logout, registro).
-// 2. Navegação entre as diferentes seções (páginas) da aplicação.
-// 3. Funções CRUD (Create, Read, Update, Delete) para interagir com o Firestore.
-// 4. Renderização dinâmica de componentes (cards, gráficos, tabelas).
-// 5. Manipulação de eventos (cliques em botões, submissão de formulários).
+// STATUS DO PROJETO:
+//
+// Funcionalidades Implementadas:
+// ✔️ Autenticação de Usuários (Login, Registro)
+// ✔️ Gestão de Contas (Contas Correntes, Poupança, etc.)
+// ✔️ Gestão de Transações (Receitas e Despesas)
+// ✔️ Cálculo de Saldo em Tempo Real
+// ✔️ Controle de Cartões de Crédito (Cálculo de Fatura)
+// ✔️ Dashboard com Resumo Financeiro e Gráfico
+// ✔️ Cache de dados local para performance
+//
+// Próximos Passos (A Implementar):
+// ⏳ Gestão de Orçamentos (Em implementação nesta versão)
+// ⏳ Gestão de Objetivos/Metas
+// ⏳ Pagamento de Fatura de Cartão
+// ⏳ Transações Recorrentes e Parceladas
+// ⏳ Anexo de Comprovantes
+// ⏳ Relatórios Avançados
+// ⏳ Ferramentas (Exportação, Calculadoras, etc.)
 // =============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthlySavingsEl = document.getElementById('monthly-savings');
     const mainChartCanvas = document.getElementById('main-chart');
     const recentTransactionsList = document.getElementById('recent-transactions-list');
+    const budgetsOverviewList = document.getElementById('budgets-overview-list');
     
     // Transações
     const addTransactionBtn = document.getElementById('add-transaction-btn');
@@ -57,12 +71,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialBalanceGroup = document.getElementById('initial-balance-group');
     const creditCardsList = document.getElementById('credit-cards-list');
 
+    // Orçamentos
+    const addBudgetBtn = document.getElementById('add-budget-btn');
+    const budgetModal = document.getElementById('budget-modal');
+    const budgetForm = document.getElementById('budget-form');
+    const budgetModalTitle = document.getElementById('budget-modal-title');
+    const budgetsList = document.getElementById('budgets-list');
+
 
     // --- ESTADO DA APLICAÇÃO (CACHE LOCAL) ---
     let currentUser = null;
     let mainChart = null;
     let userAccounts = []; 
     let userTransactions = [];
+    let userBudgets = []; // NOVO
 
     // --- INICIALIZAÇÃO ---
 
@@ -74,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = null;
             userAccounts = [];
             userTransactions = [];
+            userBudgets = [];
             showAuthScreen();
         }
     });
@@ -107,6 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const transactionsSnapshot = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
         userTransactions = transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // NOVO: Busca orçamentos
+        const budgetsSnapshot = await db.collection('budgets').where('userId', '==', currentUser.uid).get();
+        userBudgets = budgetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         calculateAllBalances();
     }
@@ -184,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'transactions': loadTransactionsData(); break;
             case 'accounts': loadAccountsData(); break;
             case 'cards': loadCardsData(); break;
+            case 'budgets': loadBudgetsData(); break; // NOVO
         }
     }
     
@@ -221,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         accountForm.reset();
         accountModalTitle.textContent = 'Nova Conta';
         accountForm['account-id'].value = '';
-        accountTypeSelect.value = 'conta_corrente'; // Reseta para o padrão
+        accountTypeSelect.value = 'conta_corrente';
         accountTypeSelect.dispatchEvent(new Event('change'));
         openModal(accountModal);
     });
@@ -337,9 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMonth = today.getMonth();
         const closingDay = card.closingDay;
         const dueDay = card.dueDate;
-
         let start, end, due;
-
         if (today.getDate() > closingDay) {
             start = new Date(currentYear, currentMonth, closingDay + 1);
             end = new Date(currentYear, currentMonth + 1, closingDay);
@@ -350,6 +376,101 @@ document.addEventListener('DOMContentLoaded', () => {
             due = new Date(currentYear, currentMonth, dueDay);
         }
         return { start, end, due };
+    }
+
+    // --- LÓGICA DE ORÇAMENTOS ---
+    function loadBudgetsData() {
+        budgetsList.innerHTML = '';
+        const currentMonth = new Date().toISOString().slice(0, 7); // Formato "YYYY-MM"
+        
+        const monthlyBudgets = userBudgets.filter(b => b.month === currentMonth);
+
+        if (monthlyBudgets.length === 0) {
+            budgetsList.innerHTML = '<p class="empty-state">Você ainda não criou nenhum orçamento para este mês. Que tal começar agora?</p>';
+            return;
+        }
+
+        monthlyBudgets.forEach(budget => {
+            const spentAmount = userTransactions
+                .filter(t => t.category === budget.category && t.type === 'despesa' && t.date.toDate().toISOString().slice(0, 7) === currentMonth)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const progress = Math.min((spentAmount / budget.amount) * 100, 100);
+            const remaining = budget.amount - spentAmount;
+            
+            const budgetCard = document.createElement('div');
+            budgetCard.className = 'budget-card';
+            budgetCard.innerHTML = `
+                <div class="budget-card-header">
+                    <h4>${budget.category}</h4>
+                    <button class="btn-danger delete-budget-btn" data-id="${budget.id}">&times;</button>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${progress}%;"></div>
+                </div>
+                <div class="budget-card-details">
+                    <span>${formatCurrency(spentAmount)} / ${formatCurrency(budget.amount)}</span>
+                    <span>${formatCurrency(remaining)} ${remaining >= 0 ? 'restante' : 'excedido'}</span>
+                </div>
+            `;
+            budgetsList.appendChild(budgetCard);
+        });
+    }
+
+    addBudgetBtn.addEventListener('click', () => {
+        budgetForm.reset();
+        budgetModalTitle.textContent = 'Novo Orçamento';
+        budgetForm['budget-id'].value = '';
+        openModal(budgetModal);
+    });
+
+    budgetForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const budgetId = budgetForm['budget-id'].value;
+        const category = budgetForm['budget-category'].value;
+        const currentMonth = new Date().toISOString().slice(0, 7);
+
+        // Verifica se já existe um orçamento para essa categoria no mês
+        const existingBudget = userBudgets.find(b => b.category === category && b.month === currentMonth);
+        if (existingBudget && !budgetId) {
+            alert('Já existe um orçamento para esta categoria neste mês.');
+            return;
+        }
+
+        const data = {
+            userId: currentUser.uid,
+            category: category,
+            amount: parseFloat(budgetForm['budget-amount'].value),
+            month: currentMonth
+        };
+
+        try {
+            if (budgetId) { // Edição não está implementada, mas a lógica está aqui
+                await db.collection('budgets').doc(budgetId).update(data);
+            } else {
+                await db.collection('budgets').add(data);
+            }
+            await fetchAllData();
+            loadBudgetsData();
+            closeModal(budgetModal);
+        } catch (error) { console.error("Erro ao salvar orçamento:", error); alert("Não foi possível salvar."); }
+    });
+
+    budgetsList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-budget-btn')) {
+            const budgetId = e.target.dataset.id;
+            if (confirm('Tem certeza que deseja excluir este orçamento?')) {
+                deleteBudget(budgetId);
+            }
+        }
+    });
+
+    async function deleteBudget(id) {
+        try {
+            await db.collection('budgets').doc(id).delete();
+            await fetchAllData();
+            loadBudgetsData();
+        } catch (error) { console.error("Erro ao excluir orçamento:", error); alert("Não foi possível excluir."); }
     }
 
 
@@ -382,26 +503,55 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `<span><i class="fas ${t.type === 'receita' ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${t.type === 'receita' ? 'var(--secondary-color)' : 'var(--danger-color)'};"></i> ${t.description}</span><strong>${formatCurrency(t.amount)}</strong>`;
             recentTransactionsList.appendChild(li);
         });
+
+        renderBudgetsOverview(); // NOVO
         renderMainChart();
+    }
+
+    function renderBudgetsOverview() {
+        budgetsOverviewList.innerHTML = '';
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const monthlyBudgets = userBudgets.filter(b => b.month === currentMonth);
+
+        if (monthlyBudgets.length === 0) {
+            budgetsOverviewList.innerHTML = '<p class="empty-state-small">Sem orçamentos para este mês.</p>';
+            return;
+        }
+
+        monthlyBudgets.slice(0, 4).forEach(budget => {
+            const spentAmount = userTransactions
+                .filter(t => t.category === budget.category && t.type === 'despesa' && t.date.toDate().toISOString().slice(0, 7) === currentMonth)
+                .reduce((sum, t) => sum + t.amount, 0);
+            const progress = Math.min((spentAmount / budget.amount) * 100, 100);
+            
+            const overviewItem = document.createElement('div');
+            overviewItem.className = 'budget-overview-item';
+            overviewItem.innerHTML = `
+                <div class="budget-overview-header">
+                    <span>${budget.category}</span>
+                    <span>${formatCurrency(spentAmount)}</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${progress}%;"></div>
+                </div>
+            `;
+            budgetsOverviewList.appendChild(overviewItem);
+        });
     }
     
     function renderMainChart() {
         if (!currentUser) return;
-    
         const labels = [];
         const incomeData = [];
         const expenseData = [];
-        
         for (let i = 5; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             const month = d.toLocaleString('pt-BR', { month: 'short' });
             const year = d.getFullYear();
             labels.push(`${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`);
-            
             const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
             const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-
             let income = 0;
             let expense = 0;
             userTransactions.forEach(t => {
@@ -414,34 +564,20 @@ document.addEventListener('DOMContentLoaded', () => {
             incomeData.push(income);
             expenseData.push(expense);
         }
-        
-        if (mainChart) {
-            mainChart.destroy();
-        }
-
+        if (mainChart) { mainChart.destroy(); }
         mainChart = new Chart(mainChartCanvas, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Receitas',
-                    data: incomeData,
-                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    borderWidth: 1
+                    label: 'Receitas', data: incomeData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1
                 }, {
-                    label: 'Despesas',
-                    data: expenseData,
-                    backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                    borderColor: 'rgba(239, 68, 68, 1)',
-                    borderWidth: 1
+                    label: 'Despesas', data: expenseData,
+                    backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
     }
 
