@@ -2302,16 +2302,19 @@ a:hover {
 }
 
 .btn-admin {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
     background-color: var(--info-color);
     color: white;
-    padding: 0.7rem;
+    padding: 0.8rem 1rem;
     margin-bottom: 0.5rem;
     border-radius: 8px;
-    text-align: center;
+    text-align: left;
     font-weight: 500;
     transition: background-color 0.3s ease;
+    box-sizing: border-box;
+    text-decoration: none;
 }
 .btn-admin:hover {
     background-color: #2563eb;
