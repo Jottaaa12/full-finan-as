@@ -35,7 +35,7 @@ Os mantenedores do projeto têm o direito e a responsabilidade de remover, edita
 Se você testemunhar ou sofrer comportamento inaceitável, ou tiver outras preocupações, por favor, reporte entrando em contato com a equipe do projeto através de:
 
 - **Instagram**: [@jottaaa0](https://instagram.com/jottaaa0)
-- **Email**: [Seu email de contato]
+- **Email**: joaopedro.torres@ymail.com
 - **Issues**: [GitHub Issues](https://github.com/Jottaaa12/full-finan-as/issues)
 
 Todas as queixas serão revisadas e investigadas e resultarão em uma resposta que é considerada necessária e apropriada às circunstâncias. A equipe do projeto é obrigada a manter a confidencialidade em relação ao relator de um incidente.
