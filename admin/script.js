@@ -1,6 +1,15 @@
 // =============================
 //  ADMIN PANEL - FULL FINANÇAS
 // =============================
+// 
+// CORREÇÕES IMPLEMENTADAS:
+// ✅ Firebase Storage adicionado ao index.html
+// ✅ Removidas redeclarações de variáveis db e auth (já criadas no firebase-config.js)
+// ✅ Removida inicialização duplicada do Firebase
+// ✅ Scripts organizados na ordem correta no index.html
+//
+// ESTADO: Painel de admin funcional sem conflitos de script
+// =============================
 
 // === CONFIGURE O UID DO ADMIN AQUI ===
 const ADMIN_UID = 'd1J7P7mkgxgHz3kDQtGiDbgmi1M2'; // <-- Substitua pelo UID do admin
@@ -13,13 +22,6 @@ const adminPanel = document.getElementById('admin-panel');
 const feedbackTableBody = document.getElementById('feedback-table-body');
 const logoutBtn = document.getElementById('admin-logout-btn');
 const accessDenied = document.getElementById('access-denied');
-
-// Inicializa Firebase (caso não esteja)
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const auth = firebase.auth();
-const db = firebase.firestore();
 
 // Estado
 let currentUser = null;
