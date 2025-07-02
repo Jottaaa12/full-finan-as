@@ -1,20 +1,22 @@
 // =============================================================================
 // SCRIPT PRINCIPAL DA APLICAÇÃO - Full Finanças
 // =============================================================================
-// STATUS DO PROJETO: BETA 2 FINALIZADO
+// STATUS DO PROJETO: BETA 2 (Estável)
 //
-// Próximos Passos (A Implementar):
-// (Todos os itens da BETA 2 concluídos!)
+// Próximos Passos (Roteiro Pós-BETA 2):
+// ⏳ 1. Relatório de Fluxo de Caixa Projetado
+// ⏳ 2. Melhorias de Usabilidade (Busca Global e Divisão de Transações)
+// ⏳ 3. Conciliação Bancária via CSV (Versão Avançada)
 //
-// Funcionalidades já concluídas:
+// Funcionalidades já concluídas na BETA 2:
 // ✅ Dashboard do Administrador (Métricas Gerais)
 // ✅ Ferramentas de Suporte Ativo (Editar/Excluir transações de usuários)
 // ✅ Ajuste Manual de Saldo de Contas (Admin)
 // ✅ Ferramentas de Diagnóstico (Admin)
-// ✅ Relatório de Fluxo de Caixa Projetado
-// ✅ Conciliação Bancária via CSV
 // ✅ Controle de Contas a Pagar/Receber
 // ✅ Sistema de Feedback e Painel de Admin
+// ✅ Tour Guiado para Novos Usuários
+// ✅ Interface Responsiva e Moderna
 //
 
 document.addEventListener('DOMContentLoaded', () => {
