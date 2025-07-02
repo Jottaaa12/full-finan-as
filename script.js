@@ -2294,14 +2294,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
+    // Variáveis globais do tour
     let currentTourStep = 0;
     let tourActive = false;
+    let resizeTimeout;
+    const tourOverlay = document.getElementById('tour-overlay');
+    const tourTooltip = document.getElementById('tour-tooltip');
+    const restartTourBtn = document.getElementById('restart-tour-btn');
 
     function startTour() {
         tourActive = true;
-        document.getElementById('tour-overlay').classList.remove('hidden');
-        document.getElementById('tour-tooltip').classList.remove('hidden');
+        currentTourStep = 0;
+        tourOverlay.classList.remove('hidden');
+        tourTooltip.classList.remove('hidden');
+        
+        // Adicionar classe visible após um pequeno delay para ativar a animação
+        setTimeout(() => {
+            tourOverlay.classList.add('visible');
+            tourTooltip.classList.add('visible');
+        }, 50);
+
+        // Criar indicadores de progresso
+        createProgressDots();
         showTourStep(0);
+
+        // Salvar progresso no localStorage
+        localStorage.setItem('tourStarted', 'true');
+    }
+
+    function createProgressDots() {
+        const progressContainer = document.querySelector('.tour-progress');
+        progressContainer.innerHTML = '';
+        
+        tourSteps.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = `tour-progress-dot ${index === currentTourStep ? 'active' : ''}`;
+            progressContainer.appendChild(dot);
+        });
+    }
+
+    function updateProgressDots() {
+        const dots = document.querySelectorAll('.tour-progress-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentTourStep);
+        });
     }
 
     function showTourStep(stepIndex) {
@@ -2310,58 +2346,171 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTourStep = stepIndex;
         const step = tourSteps[stepIndex];
         const el = document.querySelector(step.element);
+        
         if (!el) {
-            document.getElementById('tour-tooltip').style.top = '20vh';
-            document.getElementById('tour-tooltip').style.left = '50vw';
+            // Elemento não encontrado - posicionar no centro da tela
+            positionTooltipCenter();
         } else {
             // Destacar elemento
             el.classList.add('highlight-tour');
-            // Calcular posição do tooltip
-            const rect = el.getBoundingClientRect();
-            const tooltip = document.getElementById('tour-tooltip');
-            const scrollY = window.scrollY || window.pageYOffset;
-            let top = rect.bottom + scrollY + 16;
-            let left = rect.left + (rect.width / 2) - 160;
-            if (window.innerWidth < 400) left = 10;
-            if (top + 220 > window.innerHeight + scrollY) top = rect.top + scrollY - 220;
-            tooltip.style.top = `${top}px`;
-            tooltip.style.left = `${Math.max(left, 10)}px`;
+            
+            // Calcular e aplicar posição do tooltip
+            positionTooltip(el);
+
+            // Garantir que o elemento está visível
+            ensureElementVisibility(el);
         }
+        
+        // Atualizar conteúdo
         document.getElementById('tour-title').textContent = step.title;
         document.getElementById('tour-text').textContent = step.text;
         document.getElementById('tour-prev-btn').disabled = stepIndex === 0;
         document.getElementById('tour-next-btn').textContent = (stepIndex === tourSteps.length - 1) ? 'Finalizar' : 'Próximo';
+
+        // Atualizar indicadores de progresso
+        updateProgressDots();
+
+        // Salvar progresso
+        if (currentUser) {
+            localStorage.setItem('tourStep', stepIndex.toString());
+        }
+    }
+
+    function positionTooltipCenter() {
+        const tooltip = document.getElementById('tour-tooltip');
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = '50%';
+        tooltip.style.left = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
+    }
+
+    function positionTooltip(targetElement) {
+        const tooltip = document.getElementById('tour-tooltip');
+        const rect = targetElement.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Resetar posicionamento anterior
+        tooltip.style.position = 'fixed';
+        tooltip.style.transform = 'none';
+        
+        // Calcular posições
+        let top, left;
+        
+        // Posicionamento vertical
+        if (rect.bottom + tooltipRect.height + 16 <= viewportHeight) {
+            // Abaixo do elemento
+            top = rect.bottom + 16;
+        } else if (rect.top - tooltipRect.height - 16 >= 0) {
+            // Acima do elemento
+            top = rect.top - tooltipRect.height - 16;
+        } else {
+            // Centro vertical
+            top = Math.max(16, Math.min(viewportHeight - tooltipRect.height - 16, 
+                rect.top + rect.height/2 - tooltipRect.height/2));
+        }
+        
+        // Posicionamento horizontal
+        left = Math.max(16, Math.min(viewportWidth - tooltipRect.width - 16, 
+            rect.left + rect.width/2 - tooltipRect.width/2));
+        
+        // Aplicar posições
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+    }
+
+    function ensureElementVisibility(element) {
+        // Verificar se o elemento está na viewport
+        const rect = element.getBoundingClientRect();
+        const isInViewport = (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= window.innerHeight &&
+            rect.right <= window.innerWidth
+        );
+
+        if (!isInViewport) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
     }
 
     function endTour() {
         tourActive = false;
-        document.getElementById('tour-overlay').classList.add('hidden');
-        document.getElementById('tour-tooltip').classList.add('hidden');
-        document.querySelectorAll('.highlight-tour').forEach(el => el.classList.remove('highlight-tour'));
-        // Atualizar no Firestore
+        
+        // Adicionar animação de saída
+        tourOverlay.classList.remove('visible');
+        tourTooltip.classList.remove('visible');
+        
+        // Remover elementos após a animação
+        setTimeout(() => {
+            tourOverlay.classList.add('hidden');
+            tourTooltip.classList.add('hidden');
+            document.querySelectorAll('.highlight-tour').forEach(el => el.classList.remove('highlight-tour'));
+        }, 300);
+
+        // Atualizar no Firestore e localStorage
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).update({ hasCompletedTour: true });
+            localStorage.setItem('tourCompleted', 'true');
         }
+
+        // Mostrar botão de reiniciar
+        restartTourBtn.classList.remove('hidden');
     }
 
     // Eventos de navegação do tour
-    if (document.getElementById('tour-prev-btn')) {
-        document.getElementById('tour-prev-btn').onclick = () => {
-            if (currentTourStep > 0) showTourStep(currentTourStep - 1);
-        };
+    document.getElementById('tour-prev-btn').onclick = () => {
+        if (currentTourStep > 0) showTourStep(currentTourStep - 1);
+    };
+
+    document.getElementById('tour-next-btn').onclick = () => {
+        if (currentTourStep < tourSteps.length - 1) {
+            showTourStep(currentTourStep + 1);
+        } else {
+            endTour();
+        }
+    };
+
+    document.getElementById('tour-close-btn').onclick = endTour;
+
+    // Reiniciar tour
+    restartTourBtn.onclick = () => {
+        restartTourBtn.classList.add('hidden');
+        startTour();
+    };
+
+    // Restaurar progresso do tour se necessário
+    function restoreTourProgress() {
+        const tourStarted = localStorage.getItem('tourStarted');
+        const tourCompleted = localStorage.getItem('tourCompleted');
+        const savedStep = localStorage.getItem('tourStep');
+
+        if (tourStarted && !tourCompleted && savedStep) {
+            startTour();
+            showTourStep(parseInt(savedStep));
+        } else if (tourCompleted) {
+            restartTourBtn.classList.remove('hidden');
+        }
     }
-    if (document.getElementById('tour-next-btn')) {
-        document.getElementById('tour-next-btn').onclick = () => {
-            if (currentTourStep < tourSteps.length - 1) {
-                showTourStep(currentTourStep + 1);
-            } else {
-                endTour();
+
+    // Adicionar listener para redimensionamento da janela
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (tourActive) {
+                showTourStep(currentTourStep);
             }
-        };
-    }
-    if (document.getElementById('tour-close-btn')) {
-        document.getElementById('tour-close-btn').onclick = () => endTour();
-    }
+        }, 100);
+    });
+
+    // Iniciar o tour se necessário
+    document.addEventListener('DOMContentLoaded', () => {
+        restoreTourProgress();
+    });
 
     // --- LÓGICA DAS ABAS DE CONTAS A PAGAR ---
     if (payablesTabs && payablesTabs.length) {
