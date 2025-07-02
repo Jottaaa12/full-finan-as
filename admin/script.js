@@ -27,12 +27,40 @@ let currentUser = null;
 // === SISTEMA DE ABAS ===
 const tabBtns = document.querySelectorAll('.admin-tab-btn');
 const tabContents = document.querySelectorAll('.admin-tab-content');
+
+function switchTab(tabName) {
+    // Remove active de todas as abas
+    tabBtns.forEach(b => b.classList.remove('active'));
+    // Esconde todos os conteúdos
+    tabContents.forEach(tc => tc.classList.add('hidden'));
+    
+    // Ativa a aba clicada
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Mostra o conteúdo correspondente
+    const activeContent = document.getElementById(`tab-${tabName}`);
+    if (activeContent) {
+        activeContent.classList.remove('hidden');
+    }
+    
+    // Carrega dados específicos da aba
+    if (tabName === 'dashboard') {
+        loadAdminDashboard();
+    } else if (tabName === 'usuarios') {
+        fetchUsers();
+    } else if (tabName === 'feedbacks') {
+        loadFeedbacks();
+    }
+}
+
+// Adiciona event listeners para as abas
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        tabContents.forEach(tc => tc.classList.add('hidden'));
-        document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+        const tabName = btn.dataset.tab;
+        switchTab(tabName);
     });
 });
 
@@ -413,19 +441,7 @@ function showLogin() {
     loginForm.reset();
     loginMsg.textContent = '';
 }
-function showAdminPanel() {
-    loginSection.classList.add('hidden');
-    document.getElementById('tab-dashboard').classList.remove('hidden');
-    document.getElementById('tab-usuarios').classList.add('hidden');
-    document.getElementById('tab-feedbacks').classList.add('hidden');
-    tabBtns[0].classList.add('active');
-    tabBtns[1].classList.remove('active');
-    tabBtns[2].classList.remove('active');
-    adminPanel.classList.remove('hidden');
-    accessDenied.classList.add('hidden');
-    loadAdminDashboard();
-    fetchUsers();
-}
+
 function showAccessDenied() {
     loginSection.classList.add('hidden');
     adminPanel.classList.add('hidden');
@@ -473,40 +489,69 @@ async function loadFeedbacks() {
 
 // === DASHBOARD DO ADMIN ===
 async function loadAdminDashboard() {
-    // Total de usuários
-    const usersSnap = await db.collection('users').get();
-    document.querySelector('#stat-total-users .stat-value').textContent = usersSnap.size;
-    // Novos usuários (7 dias)
-    const last7 = new Date();
-    last7.setDate(last7.getDate() - 7);
-    let newUsers = 0;
-    usersSnap.forEach(doc => {
-        const u = doc.data();
-        if (u.createdAt && u.createdAt.toDate && u.createdAt.toDate() >= last7) newUsers++;
-        else if (u.createdAt && typeof u.createdAt === 'string' && new Date(u.createdAt) >= last7) newUsers++;
-    });
-    document.querySelector('#stat-new-users .stat-value').textContent = newUsers;
-    // Total de transações
-    const transSnap = await db.collection('transactions').get();
-    document.querySelector('#stat-total-transactions .stat-value').textContent = transSnap.size;
-    // Feedbacks pendentes (por enquanto, todos)
-    const fbSnap = await db.collection('feedback').get();
-    document.querySelector('#stat-feedbacks-pending .stat-value').textContent = fbSnap.size;
+    try {
+        console.log('Carregando dashboard do admin...');
+        
+        // Total de usuários
+        const usersSnap = await db.collection('users').get();
+        const totalUsers = usersSnap.size;
+        const totalUsersElement = document.querySelector('#stat-total-users .stat-value');
+        if (totalUsersElement) {
+            totalUsersElement.textContent = totalUsers;
+        }
+        console.log('Total de usuários:', totalUsers);
+        
+        // Novos usuários (7 dias)
+        const last7 = new Date();
+        last7.setDate(last7.getDate() - 7);
+        let newUsers = 0;
+        usersSnap.forEach(doc => {
+            const u = doc.data();
+            if (u.createdAt && u.createdAt.toDate && u.createdAt.toDate() >= last7) newUsers++;
+            else if (u.createdAt && typeof u.createdAt === 'string' && new Date(u.createdAt) >= last7) newUsers++;
+        });
+        const newUsersElement = document.querySelector('#stat-new-users .stat-value');
+        if (newUsersElement) {
+            newUsersElement.textContent = newUsers;
+        }
+        console.log('Novos usuários (7 dias):', newUsers);
+        
+        // Total de transações
+        const transSnap = await db.collection('transactions').get();
+        const totalTransactions = transSnap.size;
+        const totalTransactionsElement = document.querySelector('#stat-total-transactions .stat-value');
+        if (totalTransactionsElement) {
+            totalTransactionsElement.textContent = totalTransactions;
+        }
+        console.log('Total de transações:', totalTransactions);
+        
+        // Feedbacks pendentes
+        const fbSnap = await db.collection('feedback').get();
+        const totalFeedbacks = fbSnap.size;
+        const totalFeedbacksElement = document.querySelector('#stat-feedbacks-pending .stat-value');
+        if (totalFeedbacksElement) {
+            totalFeedbacksElement.textContent = totalFeedbacks;
+        }
+        console.log('Total de feedbacks:', totalFeedbacks);
+        
+    } catch (error) {
+        console.error('Erro ao carregar dashboard:', error);
+        // Define valores padrão em caso de erro
+        const statElements = document.querySelectorAll('.stat-value');
+        statElements.forEach(el => {
+            if (el.textContent === '-' || el.textContent === '') {
+                el.textContent = '0';
+            }
+        });
+    }
 }
-// Chamar ao ativar aba dashboard
-const dashboardTabBtn = document.querySelector('.admin-tab-btn[data-tab="dashboard"]');
-dashboardTabBtn.addEventListener('click', loadAdminDashboard);
-// Chamar ao login
+
+// Função corrigida para mostrar o painel admin
 function showAdminPanel() {
     loginSection.classList.add('hidden');
-    document.getElementById('tab-dashboard').classList.remove('hidden');
-    document.getElementById('tab-usuarios').classList.add('hidden');
-    document.getElementById('tab-feedbacks').classList.add('hidden');
-    tabBtns[0].classList.add('active');
-    tabBtns[1].classList.remove('active');
-    tabBtns[2].classList.remove('active');
     adminPanel.classList.remove('hidden');
     accessDenied.classList.add('hidden');
-    loadAdminDashboard();
-    fetchUsers();
+    
+    // Inicializa com a aba dashboard
+    switchTab('dashboard');
 } 
