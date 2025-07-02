@@ -516,4 +516,47 @@ body {
     .stat-card {
         min-width: 90vw;
     }
+}
+
+/* Estilos específicos para o botão admin no painel principal */
+.btn-admin {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-admin:hover {
+    background-color: #2563eb;
+    text-decoration: none;
+}
+
+.btn-admin i {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Responsividade para o botão admin */
+@media (max-width: 768px) {
+    .btn-admin {
+        padding: 0.7rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-admin i {
+        font-size: 0.9rem;
+        margin-right: 0.4rem;
+    }
 } 
