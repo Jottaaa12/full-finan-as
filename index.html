@@ -861,13 +861,20 @@
     <div id="tour-tooltip" class="tour-tooltip hidden">
         <div class="tour-tooltip-header">
             <span id="tour-title"></span>
-            <button id="tour-close-btn" class="tour-close-btn" title="Pular Tour">&times;</button>
+            <button id="tour-close-btn" class="tour-close-btn" title="Pular Tour" aria-label="Pular Tour">&times;</button>
         </div>
         <div id="tour-text" class="tour-tooltip-text"></div>
+        <div class="tour-progress"></div>
         <div class="tour-tooltip-footer">
-            <button id="tour-prev-btn" class="tour-nav-btn">Anterior</button>
-            <button id="tour-next-btn" class="tour-nav-btn">Próximo</button>
+            <button id="tour-prev-btn" class="tour-nav-btn" aria-label="Etapa anterior">Anterior</button>
+            <button id="tour-next-btn" class="tour-nav-btn" aria-label="Próxima etapa">Próximo</button>
         </div>
     </div>
+
+    <!-- Botão para Reiniciar Tour -->
+    <button id="restart-tour-btn" class="restart-tour-btn hidden" aria-label="Reiniciar tour guiado">
+        <i class="fas fa-redo-alt"></i>
+        Reiniciar Tour
+    </button>
 </body>
 </html>
