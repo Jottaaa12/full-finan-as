@@ -3,7 +3,7 @@ import { initUI, navigateTo } from './ui.js';
 import { fetchAllData, calculateAllBalances } from './firestore.js';
 import { loadDashboardData } from './dashboard.js';
 import { initTransactions, loadTransactionsData, loadAccountsData, loadCardsData, loadPayablesData } from './transactions.js';
-import { initReports, loadReportsData } from './reports.js';
+import { loadReportsData } from './reports.js';
 import { initProfile } from './profile.js';
 import { initTools } from './tools.js';
 import { initSupport } from './support.js';
