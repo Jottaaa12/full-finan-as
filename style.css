@@ -177,6 +177,18 @@ a:hover {
     z-index: 3000;
 }
 
+/* CORREÇÃO ADICIONADA: Fundo escuro para o menu mobile */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2999;
+    transition: opacity 0.3s ease-in-out;
+}
+
 .sidebar-header {
     margin-bottom: 2rem;
     padding: 0 0.5rem;
@@ -400,7 +412,8 @@ a:hover {
     gap: 1.5rem;
 }
 
-.chart-container, .list-container {
+/* CORREÇÃO ADICIONADA: Unificando estilos de card */
+.chart-container, .list-container, .card-large {
     background-color: var(--bg-light);
     padding: 1.5rem;
     border-radius: 12px;
@@ -475,6 +488,17 @@ a:hover {
     font-weight: 600;
 }
 
+/* CORREÇÃO ADICIONADA: Cores para valores de receita e despesa */
+#transactions-table td.receita {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+#transactions-table td.despesa {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
 /* --- Seção de Contas --- */
 .accounts-grid {
     display: grid;
@@ -501,11 +525,6 @@ a:hover {
 .account-card-header h3 {
     font-size: 1.2rem;
     font-weight: 600;
-}
-
-.account-card-header .icon {
-    font-size: 1.5rem;
-    color: var(--primary-color);
 }
 
 .account-card-balance {
@@ -551,11 +570,6 @@ a:hover {
 .credit-card-bill-header h3 {
     font-size: 1.2rem;
     font-weight: 600;
-}
-
-.credit-card-bill-header .icon {
-    font-size: 1.8rem;
-    color: var(--info-color);
 }
 
 .bill-details {
@@ -1768,6 +1782,11 @@ a:hover {
 
 
 /* --- Responsividade Mobile e Correção do Cabeçalho --- */
+/* CORREÇÃO ADICIONADA: Botão do menu escondido em telas maiores */
+.menu-toggle-btn {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
@@ -1985,7 +2004,7 @@ a:hover {
 }
 
 .tour-nav-btn:hover:not(:disabled) {
-    background: var(--primary-dark);
+    background: var(--primary-color-dark);
     transform: translateY(-1px);
 }
 
@@ -2054,7 +2073,7 @@ a:hover {
 }
 
 .restart-tour-btn:hover {
-    background: var(--primary-dark);
+    background: var(--primary-color-dark);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -2140,9 +2159,8 @@ a:hover {
 
 /* --- Card de Alerta de Próximos Vencimentos --- */
 #payables-alert-card {
-    background: linear-gradient(90deg, var(--warning-color) 0%, #fffbe6 100%);
-    border: 1.5px solid var(--warning-color);
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+    background: linear-gradient(90deg, #fffbe6 0%, #fef3c7 100%);
+    border-left: 4px solid var(--warning-color);
 }
 #payables-alert-card .card-icon {
     background: var(--warning-color);
@@ -2157,8 +2175,8 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.98rem;
-    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    padding: 0.4rem 0;
     border-bottom: 1px solid #fde68a;
 }
 #payables-alert-list li:last-child {
@@ -2328,14 +2346,6 @@ a:hover {
     font-weight: 600;
     margin-bottom: 1.5rem;
     text-align: center;
-}
-#feedback-page .card-large {
-    background: var(--bg-light);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 2rem 2.5rem;
-    width: 100%;
-    max-width: 800px;
 }
 #feedback-form {
     display: flex;
