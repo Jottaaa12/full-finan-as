@@ -30,7 +30,7 @@ if (!firebase.apps.length) {
   app = firebase.app();
 }
 
-// Exporta os serviços do Firebase para uso no script.js
-const db = firebase.firestore();
-const auth = firebase.auth();
-const storage = firebase.storage();
+// Exporta os serviços do Firebase para uso nos módulos
+export const db = firebase.firestore();
+export const auth = firebase.auth();
+export const storage = firebase.storage();
