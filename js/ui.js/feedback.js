@@ -1,5 +1,5 @@
 
-import { db } from './firestore.js';
+import { db } from '../../firebase-config.js';
 
 /**
  * Inicializa a lógica do formulário de feedback.
