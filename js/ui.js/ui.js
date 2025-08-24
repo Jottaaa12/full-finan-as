@@ -6,6 +6,9 @@ let pageLoaderCallback = null;
 let tourActive = false;
 let currentTourStep = 0;
 
+// --- CORREÇÃO: UID do Administrador ---
+const ADMIN_UID = 'd1J7P7mkgxgHz3kDQtGiDbgmi1M2'; // UID para acesso ao painel de admin
+
 // --- Elementos do DOM (para evitar repetição) ---
 const sidebar = document.querySelector('.sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -27,7 +30,15 @@ export function initUI(user, loaderCallback) {
     setupNavigation();
     setupModalClosers();
     setupTour();
+
+    // --- CORREÇÃO: Verifica o UID do usuário para mostrar o botão de admin ---
+    const adminPanelLink = document.getElementById('admin-panel-link');
+    if (adminPanelLink && user.uid === ADMIN_UID) {
+        adminPanelLink.classList.remove('hidden');
+    }
+    // --- FIM DA CORREÇÃO ---
 }
+
 
 /**
  * Abre um modal pelo seu ID.
