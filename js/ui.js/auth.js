@@ -6,7 +6,7 @@ import { auth, db } from '../../firebase-config.js';
  * @param {Function} onUserLoggedIn Callback para quando o usuário está logado.
  * @param {Function} onUserLoggedOut Callback para quando o usuário está deslogado.
  */
-export function setupAuthListener(onUserLoggedIn, onUserLoggedOut) {
+export function initAuth(onUserLoggedIn, onUserLoggedOut) {
     auth.onAuthStateChanged(user => {
         if (user) {
             onUserLoggedIn(user);
