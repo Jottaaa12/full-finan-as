@@ -6,8 +6,8 @@ let pageLoaderCallback = null;
 let tourActive = false;
 let currentTourStep = 0;
 
-// --- CORREÇÃO: UID do Administrador ---
-const ADMIN_UID = 'd1J7P7mkgxgHz3kDQtGiDbgmi1M2'; // UID para acesso ao painel de admin
+// --- CORREÇÃO: Lista de E-mails de Administradores ---
+const ADMIN_EMAILS = ['joaopedro.torres@ymail.com']; // Adicione outros e-mails de admin aqui, se necessário
 
 // --- Elementos do DOM (para evitar repetição) ---
 const sidebar = document.querySelector('.sidebar');
@@ -31,9 +31,9 @@ export function initUI(user, loaderCallback) {
     setupModalClosers();
     setupTour();
 
-    // --- CORREÇÃO: Verifica o UID do usuário para mostrar o botão de admin ---
+    // --- CORREÇÃO: Verifica se o e-mail do usuário está na lista de admins ---
     const adminPanelLink = document.getElementById('admin-panel-link');
-    if (adminPanelLink && user.uid === ADMIN_UID) {
+    if (adminPanelLink && ADMIN_EMAILS.includes(user.email)) {
         adminPanelLink.classList.remove('hidden');
     }
     // --- FIM DA CORREÇÃO ---

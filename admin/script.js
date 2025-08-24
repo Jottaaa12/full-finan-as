@@ -3,20 +3,14 @@
 // =============================
 // 
 // CORREÇÕES IMPLEMENTADAS:
-// ✅ Firebase Storage adicionado ao index.html
-// ✅ Removidas redeclarações de variáveis db e auth (já criadas no firebase-config.js)
-// ✅ Removida inicialização duplicada do Firebase
-// ✅ Scripts organizados na ordem correta no index.html
-// ✅ Adicionadas verificações de null para evitar erros de DOM
+// ✅ Removida a constante ADMIN_UID para centralizar a verificação por e-mail.
+// ✅ Lógica de autenticação simplificada para usar apenas a lista ADMIN_EMAILS.
 //
-// ESTADO: Painel de admin funcional sem conflitos de script
+// ESTADO: Painel de admin funcional e consistente com as outras partes do sistema.
 // =============================
 
 // === VERIFICAÇÃO DE ADMIN ===
 const ADMIN_EMAILS = ['joaopedro.torres@ymail.com']; // Lista de emails autorizados
-
-// === CONFIGURE O UID DO ADMIN AQUI ===
-const ADMIN_UID = 'd1J7P7mkgxgHz3kDQtGiDbgmi1M2'; // <-- Substitua pelo UID do admin
 
 // Aguarda o DOM estar completamente carregado
 document.addEventListener('DOMContentLoaded', function() {
@@ -705,4 +699,4 @@ document.addEventListener('DOMContentLoaded', function() {
                 return 'Erro ao fazer login. Tente novamente.';
         }
     }
-}); 
+});
