@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
  * Callback executado quando o usuário é autenticado com sucesso.
  */
 async function onAuthenticated(user) {
+    // CORREÇÃO: Esconde o loader e mostra o container principal do app
+    document.getElementById('loader').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+
     AppState.currentUser = user;
     document.getElementById('main-content').classList.remove('hidden');
     document.getElementById('auth-container').classList.add('hidden');
@@ -51,6 +55,10 @@ async function onAuthenticated(user) {
  * Callback para quando o usuário faz logout.
  */
 function onSignedOut() {
+    // CORREÇÃO: Esconde o loader e mostra o container principal do app
+    document.getElementById('loader').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+
     AppState = { currentUser: null, accounts: [], transactions: [], budgets: [], goals: [], currency: 'BRL' };
     document.getElementById('main-content').classList.add('hidden');
     document.getElementById('auth-container').classList.remove('hidden');
@@ -88,20 +96,19 @@ function loadPageData(pageName) {
             loadTransactionsData(AppState.transactions, AppState.accounts, AppState.currency);
             break;
         case 'accounts':
-            loadAccountsData(AppState.accounts, AppState.currency); // <-- CORRIGIDO
+            loadAccountsData(AppState.accounts, AppState.currency);
             break;
         case 'cards':
-            loadCardsData(AppState.accounts, AppState.transactions, AppState.currency); // <-- CORRIGIDO
+            loadCardsData(AppState.accounts, AppState.transactions, AppState.currency);
             break;
         case 'budgets':
-            loadBudgetsData(AppState.budgets, AppState.transactions, AppState.currency); // <-- CORRIGIDO
+            loadBudgetsData(AppState.budgets, AppState.transactions, AppState.currency);
             break;
         case 'goals':
-            loadGoalsData(AppState.goals, AppState.accounts, AppState.currency); // <-- CORRIGIDO
+            loadGoalsData(AppState.goals, AppState.accounts, AppState.currency);
             break;
         case 'reports':
-            // Adicionado os parâmetros que faltavam para a função de relatórios funcionar corretamente
-            loadReportsData(AppState.transactions, AppState.accounts, AppState.currency); // <-- CORRIGIDO
+            loadReportsData(AppState.transactions, AppState.accounts, AppState.currency);
             break;
         case 'payables':
             loadPayablesData(AppState.transactions, AppState.currency);
