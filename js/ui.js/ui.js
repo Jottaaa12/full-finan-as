@@ -1,4 +1,4 @@
-import { db } from './firestore.js';
+import { db } from '../../firebase-config.js';
 
 // --- Estado e Callbacks do Módulo ---
 let currentUser = null;
