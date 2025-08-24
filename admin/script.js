@@ -1,3 +1,4 @@
+import { db, auth } from '../firebase-config.js';
 // =============================
 //  ADMIN PANEL - FULL FINANÇAS
 // =============================
