@@ -52,8 +52,7 @@
                     <input type="search" id="user-search-input" placeholder="Buscar por nome ou email...">
                 </div>
                 <div id="user-cards-container" class="user-cards-container">
-                    <!-- Cards de usuários inseridos via JS -->
-                </div>
+                    </div>
             </div>
             <div id="tab-feedbacks" class="admin-tab-content hidden">
                 <h2>Feedbacks Recebidos</h2>
@@ -68,15 +67,13 @@
                         </tr>
                     </thead>
                     <tbody id="feedback-table-body">
-                        <!-- Feedbacks inseridos via JS -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
         <button id="admin-logout-btn" class="admin-logout-btn">Sair</button>
     </div>
     
-    <!-- Seções de autenticação -->
     <div id="login-section" class="admin-login-section">
         <h2>Painel Admin - Full Finanças</h2>
         <form id="admin-login-form" class="admin-login-form">
@@ -87,14 +84,11 @@
         </form>
     </div>
     
-
-    
     <div id="access-denied" class="access-denied hidden">
         <h2>Acesso Negado</h2>
         <p>Você não tem permissão para acessar este painel.</p>
     </div>
-    </div>
-    <!-- Modal: Ver Transações -->
+    
     <div id="modal-transacoes" class="admin-modal hidden">
         <div class="admin-modal-content">
             <span class="admin-modal-close" id="close-modal-transacoes">&times;</span>
@@ -102,7 +96,6 @@
             <div id="modal-transacoes-list"></div>
         </div>
     </div>
-    <!-- Modal: Confirmação de Deleção -->
     <div id="modal-confirm-delete" class="admin-modal hidden">
         <div class="admin-modal-content">
             <span class="admin-modal-close" id="close-modal-delete">&times;</span>
@@ -112,7 +105,6 @@
             <button id="btn-cancel-delete" class="admin-tab-btn">Cancelar</button>
         </div>
     </div>
-    <!-- Modal de Detalhes do Usuário -->
     <div id="user-details-modal" class="modal-container hidden">
         <div class="modal-content large">
             <button class="modal-close-btn">&times;</button>
@@ -124,7 +116,6 @@
             </div>
         </div>
     </div>
-    <!-- Modal de Ajuste de Saldo -->
     <div id="adjust-balance-modal" class="modal-container hidden">
         <div class="modal-content">
             <button class="modal-close-btn" id="close-adjust-balance-modal">&times;</button>
@@ -151,14 +142,13 @@
             </form>
         </div>
     </div>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js" defer></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     
-    <!-- Config e Script do Admin -->
-    <script src="../firebase-config.js" defer></script>
-    <script src="script.js" defer></script>
+    <script type="module" src="../firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
-</html> 
+</html>
