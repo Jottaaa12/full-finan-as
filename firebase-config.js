@@ -16,7 +16,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyB9xYQv5_iyGcDGLPz-M8DSHp_DFWxLd6o",
   authDomain: "full-financas-web.firebaseapp.com",
   projectId: "full-financas-web",
-  storageBucket: "full-financas-web.appspot.com",
+  storageBucket: "full-financas-web.firebasestorage.app",
   messagingSenderId: "771231898402",
   appId: "1:771231898402:web:98f9c7dc55304b46e5a37b"
 };
