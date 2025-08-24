@@ -41,7 +41,6 @@ async function onAuthenticated(user) {
     // CORREÇÃO: Argumentos na ordem correta (accounts, then transactions)
     initTransactions(user, AppState.accounts, AppState.transactions, refreshAllData);
     initProfile(user);
-    initReports(() => AppState.transactions);
     initTools();
     initSupport();
     initBudgetsAndGoals(AppState.currentUser, AppState.accounts, refreshAllData);
