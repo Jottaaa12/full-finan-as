@@ -8,7 +8,6 @@ import { initProfile } from './profile.js';
 import { initTools } from './tools.js';
 import { initSupport } from './support.js';
 import { initFeedback } from './feedback.js';
-// CORREÇÃO: Importa a função que faltava
 import { initBudgetsAndGoals, loadBudgetsData, loadGoalsData } from './budgets-goals.js';
 
 // --- Estado Global da Aplicação ---
@@ -38,7 +37,6 @@ async function onAuthenticated(user) {
 
     // Inicializa todos os módulos, passando as funções de que precisam
     initUI(user, loadPageData);
-    // CORREÇÃO: Argumentos na ordem correta (accounts, then transactions)
     initTransactions(user, AppState.accounts, AppState.transactions, refreshAllData);
     initProfile(user);
     initTools();
@@ -90,19 +88,20 @@ function loadPageData(pageName) {
             loadTransactionsData(AppState.transactions, AppState.accounts, AppState.currency);
             break;
         case 'accounts':
-            loadAccountsData(AppState.accounts, AppState.currency, refreshAllData);
+            loadAccountsData(AppState.accounts, AppState.currency); // <-- CORRIGIDO
             break;
         case 'cards':
-            loadCardsData(AppState.accounts, AppState.transactions, AppState.currency, refreshAllData);
+            loadCardsData(AppState.accounts, AppState.transactions, AppState.currency); // <-- CORRIGIDO
             break;
         case 'budgets':
-            loadBudgetsData(AppState.budgets, AppState.transactions, AppState.currency, refreshAllData);
+            loadBudgetsData(AppState.budgets, AppState.transactions, AppState.currency); // <-- CORRIGIDO
             break;
         case 'goals':
-            loadGoalsData(AppState.goals, AppState.accounts, AppState.currency, refreshAllData);
+            loadGoalsData(AppState.goals, AppState.accounts, AppState.currency); // <-- CORRIGIDO
             break;
         case 'reports':
-            loadReportsData(AppState.transactions);
+            // Adicionado os parâmetros que faltavam para a função de relatórios funcionar corretamente
+            loadReportsData(AppState.transactions, AppState.accounts, AppState.currency); // <-- CORRIGIDO
             break;
         case 'payables':
             loadPayablesData(AppState.transactions, AppState.currency);
