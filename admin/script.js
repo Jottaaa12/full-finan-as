@@ -6,7 +6,7 @@ import { db, auth } from '../firebase-config.js';
 // CORREÇÕES IMPLEMENTADAS:
 // ✅ Removida a constante ADMIN_UID para centralizar a verificação por e-mail.
 // ✅ Lógica de autenticação simplificada para usar apenas a lista ADMIN_EMAILS.
-// ✅ Corrigida a busca e exibição de transações de usuários.
+// ✅ Corrigida a busca e exibição de transações de usuários, ordenando os dados no lado do cliente.
 //
 // ESTADO: Painel de admin funcional e consistente com as outras partes do sistema.
 // =============================
@@ -176,25 +176,35 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTransacoesList.innerHTML = 'Carregando...';
         currentUserIdTransacoes = userId;
         try {
-            // CORREÇÃO: Ordenar por 'date' (campo de timestamp) em vez de 'createdAt'
+            // ===== INÍCIO DA CORREÇÃO =====
+            // 1. A consulta agora busca apenas as transações do usuário, sem ordenação.
             const snap = await db.collection('transactions')
                 .where('userId', '==', userId)
-                .orderBy('date', 'desc')
-                .limit(10)
                 .get();
+
             if (snap.empty) {
                 modalTransacoesList.innerHTML = '<div>Nenhuma transação encontrada.</div>';
                 currentUserTransacoes = [];
                 return;
             }
-            currentUserTransacoes = [];
-            let html = '<table class="transacoes-table-admin"><thead><tr><th>Tipo</th><th>Valor</th><th>Data</th><th>Descrição</th><th>Ações</th></tr></thead><tbody>';
-            snap.forEach(doc => {
+
+            // Mapeia os documentos para um array de transações
+            currentUserTransacoes = snap.docs.map(doc => {
                 const t = doc.data();
                 t.id = doc.id;
-                currentUserTransacoes.push(t);
-                
-                // CORREÇÃO: Usar os nomes de campo corretos ('type', 'amount', 'description')
+                return t;
+            });
+
+            // 2. A ordenação é feita aqui, no JavaScript, antes de exibir.
+            currentUserTransacoes.sort((a, b) => b.date.seconds - a.date.seconds);
+
+            // Pega apenas as 10 transações mais recentes
+            const recentTransactions = currentUserTransacoes.slice(0, 10);
+            
+            // ===== FIM DA CORREÇÃO =====
+
+            let html = '<table class="transacoes-table-admin"><thead><tr><th>Tipo</th><th>Valor</th><th>Data</th><th>Descrição</th><th>Ações</th></tr></thead><tbody>';
+            recentTransactions.forEach(t => { // Itera sobre a lista ordenada e limitada
                 const tipo = t.type || '-';
                 const valor = t.amount !== undefined ? t.amount : 0;
                 const dataFormatada = t.date && t.date.toDate ? t.date.toDate().toLocaleDateString('pt-BR') : '-';
@@ -247,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
                     
-                    // CORREÇÃO: Usar nomes de campos corretos para preencher o formulário
                     const elements = {
                         'edit-transaction-id-admin': id,
                         'edit-transaction-desc-admin': t.description || '',
@@ -291,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = document.getElementById('edit-transaction-id-admin')?.value;
             if (!id) return;
             
-            // CORREÇÃO: Salvar com os nomes de campos corretos e consistentes
             const data = {
                 description: document.getElementById('edit-transaction-desc-admin')?.value || '',
                 amount: parseFloat(document.getElementById('edit-transaction-value-admin')?.value) || 0,
