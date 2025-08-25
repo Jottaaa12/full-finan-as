@@ -592,7 +592,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         feedbackTableBody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
         try {
-            const snap = await db.collection('feedback').orderBy('createdAt', 'desc').get();
+            // CORREÇÃO: Ordenando por 'date' ao invés de 'createdAt'
+            const snap = await db.collection('feedback').orderBy('date', 'desc').get();
             if (snap.empty) {
                 feedbackTableBody.innerHTML = '<tr><td colspan="5">Nenhum feedback enviado ainda.</td></tr>';
                 return;
@@ -600,18 +601,20 @@ document.addEventListener('DOMContentLoaded', function() {
             let html = '';
             snap.forEach(doc => {
                 const fb = doc.data();
-                const data = fb.createdAt && fb.createdAt.toDate ? fb.createdAt.toDate() : (fb.createdAt ? new Date(fb.createdAt) : null);
+                // CORREÇÃO: Lendo 'fb.date' ao invés de 'fb.createdAt'
+                const data = fb.date && fb.date.toDate ? fb.date.toDate() : null;
                 html += `<tr>
                     <td>${data ? data.toLocaleString('pt-BR') : '-'}</td>
-                    <td>${fb.tipo || '-'}</td>
-                    <td>${fb.assunto || '-'}</td>
-                    <td>${fb.descricao || '-'}</td>
+                    <td>${fb.type || '-'}</td>
+                    <td>${fb.subject || '-'}</td>
+                    <td>${fb.description || '-'}</td>
                     <td>${fb.userId || '-'}</td>
                 </tr>`;
             });
             feedbackTableBody.innerHTML = html;
         } catch (err) {
-            feedbackTableBody.innerHTML = '<tr><td colspan="5">Erro ao carregar feedbacks.</td></tr>';
+            console.error("Erro ao carregar feedbacks:", err);
+            feedbackTableBody.innerHTML = '<tr><td colspan="5">Erro ao carregar feedbacks. Verifique o console.</td></tr>';
         }
     }
 
