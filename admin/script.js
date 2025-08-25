@@ -6,6 +6,7 @@ import { db, auth } from '../firebase-config.js';
 // CORREÇÕES IMPLEMENTADAS:
 // ✅ Removida a constante ADMIN_UID para centralizar a verificação por e-mail.
 // ✅ Lógica de autenticação simplificada para usar apenas a lista ADMIN_EMAILS.
+// ✅ Corrigida a busca e exibição de transações de usuários.
 //
 // ESTADO: Painel de admin funcional e consistente com as outras partes do sistema.
 // =============================
@@ -175,9 +176,10 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTransacoesList.innerHTML = 'Carregando...';
         currentUserIdTransacoes = userId;
         try {
+            // CORREÇÃO: Ordenar por 'date' (campo de timestamp) em vez de 'createdAt'
             const snap = await db.collection('transactions')
                 .where('userId', '==', userId)
-                .orderBy('createdAt', 'desc')
+                .orderBy('date', 'desc')
                 .limit(10)
                 .get();
             if (snap.empty) {
@@ -191,11 +193,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const t = doc.data();
                 t.id = doc.id;
                 currentUserTransacoes.push(t);
+                
+                // CORREÇÃO: Usar os nomes de campo corretos ('type', 'amount', 'description')
+                const tipo = t.type || '-';
+                const valor = t.amount !== undefined ? t.amount : 0;
+                const dataFormatada = t.date && t.date.toDate ? t.date.toDate().toLocaleDateString('pt-BR') : '-';
+                const descricao = t.description || '';
+
                 html += `<tr data-id="${t.id}">
-                    <td>${t.tipo || '-'}</td>
-                    <td>R$ ${t.valor?.toFixed(2) || '-'}</td>
-                    <td>${t.data || '-'}</td>
-                    <td>${t.descricao || ''}</td>
+                    <td>${tipo}</td>
+                    <td>R$ ${valor.toFixed(2)}</td>
+                    <td>${dataFormatada}</td>
+                    <td>${descricao}</td>
                     <td class="transacoes-actions">
                         <button class="btn-edit-transacao edit-user-transaction-btn" data-id="${t.id}">Editar</button>
                         <button class="btn-delete-transacao delete-user-transaction-btn" data-id="${t.id}">Excluir</button>
@@ -205,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '</tbody></table>';
             modalTransacoesList.innerHTML = html;
         } catch (err) {
-            modalTransacoesList.innerHTML = '<div>Erro ao buscar transações.</div>';
+            console.error("Erro ao buscar transações:", err);
+            modalTransacoesList.innerHTML = '<div>Erro ao buscar transações. Verifique o console.</div>';
             currentUserTransacoes = [];
         }
     }
@@ -231,33 +241,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!doc.exists) return alert('Transação não encontrada.');
                     const t = doc.data();
                     
-                    // Verifica se os elementos existem antes de acessá-los
                     const editModal = document.getElementById('edit-transaction-modal-admin');
                     if (!editModal) {
                         alert('Modal de edição não encontrado');
                         return;
                     }
                     
+                    // CORREÇÃO: Usar nomes de campos corretos para preencher o formulário
                     const elements = {
                         'edit-transaction-id-admin': id,
-                        'edit-transaction-desc-admin': t.descricao || '',
-                        'edit-transaction-value-admin': t.valor || '',
-                        'edit-transaction-date-admin': t.data || '',
-                        'edit-transaction-category-admin': t.categoria || '',
-                        'edit-transaction-type-admin': t.tipo || 'despesa',
-                        'edit-transaction-account-admin': t.conta || '',
+                        'edit-transaction-desc-admin': t.description || '',
+                        'edit-transaction-value-admin': t.amount || '',
+                        'edit-transaction-date-admin': t.date && t.date.toDate ? t.date.toDate().toISOString().split('T')[0] : '',
+                        'edit-transaction-category-admin': t.category || '',
+                        'edit-transaction-type-admin': t.type || 'despesa',
+                        'edit-transaction-account-admin': t.accountId || '',
                         'edit-transaction-status-admin': t.isPaid ? 'true' : 'false'
                     };
                     
-                    // Define valores apenas se os elementos existirem
-                    Object.entries(elements).forEach(([id, value]) => {
-                        const element = document.getElementById(id);
+                    Object.entries(elements).forEach(([elementId, value]) => {
+                        const element = document.getElementById(elementId);
                         if (element) {
-                            if (element.type === 'number') {
-                                element.value = parseFloat(value) || '';
-                            } else {
-                                element.value = value;
-                            }
+                            element.value = value;
                         }
                     });
                     
@@ -286,13 +291,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = document.getElementById('edit-transaction-id-admin')?.value;
             if (!id) return;
             
+            // CORREÇÃO: Salvar com os nomes de campos corretos e consistentes
             const data = {
-                descricao: document.getElementById('edit-transaction-desc-admin')?.value || '',
-                valor: parseFloat(document.getElementById('edit-transaction-value-admin')?.value) || 0,
-                data: document.getElementById('edit-transaction-date-admin')?.value || '',
-                categoria: document.getElementById('edit-transaction-category-admin')?.value || '',
-                tipo: document.getElementById('edit-transaction-type-admin')?.value || 'despesa',
-                conta: document.getElementById('edit-transaction-account-admin')?.value || '',
+                description: document.getElementById('edit-transaction-desc-admin')?.value || '',
+                amount: parseFloat(document.getElementById('edit-transaction-value-admin')?.value) || 0,
+                date: firebase.firestore.Timestamp.fromDate(new Date(document.getElementById('edit-transaction-date-admin')?.value)),
+                category: document.getElementById('edit-transaction-category-admin')?.value || '',
+                type: document.getElementById('edit-transaction-type-admin')?.value || 'despesa',
+                accountId: document.getElementById('edit-transaction-account-admin')?.value || '',
                 isPaid: document.getElementById('edit-transaction-status-admin')?.value === 'true',
             };
             try {
@@ -343,16 +349,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Deleta todas as coleções relacionadas ao usuário
     async function deleteUserData(userId) {
-        // Deleta transações
-        const transSnap = await db.collection('transactions').where('userId', '==', userId).get();
+        const collections = ['transactions', 'accounts', 'budgets', 'goals', 'feedback'];
         const batch = db.batch();
-        transSnap.forEach(doc => batch.delete(doc.ref));
-        // Deleta contas
-        const accSnap = await db.collection('accounts').where('userId', '==', userId).get();
-        accSnap.forEach(doc => batch.delete(doc.ref));
-        // Deleta orçamentos
-        const budSnap = await db.collection('budgets').where('userId', '==', userId).get();
-        budSnap.forEach(doc => batch.delete(doc.ref));
+        for (const collectionName of collections) {
+            const snap = await db.collection(collectionName).where('userId', '==', userId).get();
+            snap.forEach(doc => batch.delete(doc.ref));
+        }
         await batch.commit();
     }
 
@@ -404,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     detailsAccountsSection.innerHTML = '';
                     accSnap.forEach(doc => {
                         const a = doc.data();
-                        detailsAccountsSection.innerHTML += `<li><span><b>${a.nome || '-'}:</b> R$ ${a.saldo?.toFixed(2) || '-'} (${a.tipo || '-'})</span> <button class="btn-adjust-balance" data-accountid="${doc.id}" data-userid="${userId}">Ajustar</button></li>`;
+                        detailsAccountsSection.innerHTML += `<li><span><b>${a.name || '-'}:</b> R$ ${a.currentBalance?.toFixed(2) || '0.00'} (${a.type || '-'})</span> <button class="btn-adjust-balance" data-accountid="${doc.id}" data-userid="${userId}">Ajustar</button></li>`;
                     });
                 }
             }
@@ -417,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     detailsBudgetsSection.innerHTML = '';
                     budSnap.forEach(doc => {
                         const b = doc.data();
-                        detailsBudgetsSection.innerHTML += `<li><b>${b.categoria || '-'}:</b> R$ ${b.valor?.toFixed(2) || '-'} (${b.mes || '-'})</li>`;
+                        detailsBudgetsSection.innerHTML += `<li><b>${b.category || '-'}:</b> R$ ${b.amount?.toFixed(2) || '-'} (${b.month || '-'})</li>`;
                     });
                 }
             }
@@ -430,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     detailsGoalsSection.innerHTML = '';
                     goalSnap.forEach(doc => {
                         const g = doc.data();
-                        detailsGoalsSection.innerHTML += `<li><b>${g.nome || '-'}:</b> R$ ${g.valor?.toFixed(2) || '-'} (${g.meta || '-'})</li>`;
+                        detailsGoalsSection.innerHTML += `<li><b>${g.name || '-'}:</b> R$ ${g.currentAmount?.toFixed(2) || '0.00'} de ${g.targetAmount?.toFixed(2) || '0.00'}</li>`;
                     });
                 }
             }
@@ -479,10 +481,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const accountId = document.getElementById('adjust-account-id')?.value;
             const userId = document.getElementById('adjust-user-id')?.value;
             const type = document.getElementById('adjust-type')?.value;
-            const valor = parseFloat(document.getElementById('adjust-amount')?.value);
-            const descricao = document.getElementById('adjust-reason')?.value;
+            const amount = parseFloat(document.getElementById('adjust-amount')?.value);
+            const description = document.getElementById('adjust-reason')?.value;
             
-            if (!valor || valor <= 0) {
+            if (!amount || amount <= 0) {
                 alert('Informe um valor válido para o ajuste.');
                 return;
             }
@@ -491,13 +493,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('transactions').add({
                     userId: userId,
                     accountId: accountId,
-                    tipo: type,
-                    valor: valor,
-                    descricao: descricao,
-                    categoria: 'Ajuste de Saldo (Admin)',
-                    data: new Date().toISOString().slice(0,10),
+                    type: type,
+                    amount: amount,
+                    description: description,
+                    category: 'Ajuste de Saldo (Admin)',
+                    date: firebase.firestore.Timestamp.now(),
                     isPaid: true,
-                    createdAt: new Date()
                 });
                 
                 const adjustModal = document.getElementById('adjust-balance-modal');
@@ -505,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 alert('Ajuste realizado com sucesso!');
                 
-                // Atualiza detalhes do usuário
                 const titleElement = document.getElementById('user-details-title');
                 if (titleElement) {
                     showUserDetails(userId, titleElement.textContent.replace('Detalhes de ', ''));
@@ -569,13 +569,11 @@ document.addEventListener('DOMContentLoaded', function() {
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            // Verifica se o email do usuário está na lista de admins
             if (ADMIN_EMAILS.includes(user.email)) {
                 if (loginSection) loginSection.classList.add('hidden');
                 if (accessDenied) accessDenied.classList.add('hidden');
                 if (adminPanel) {
                     adminPanel.classList.remove('hidden');
-                    // Carrega os dados iniciais
                     switchTab('dashboard');
                 }
             } else {
@@ -592,7 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         feedbackTableBody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
         try {
-            // CORREÇÃO: Ordenando por 'date' ao invés de 'createdAt'
             const snap = await db.collection('feedback').orderBy('date', 'desc').get();
             if (snap.empty) {
                 feedbackTableBody.innerHTML = '<tr><td colspan="5">Nenhum feedback enviado ainda.</td></tr>';
@@ -601,7 +598,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let html = '';
             snap.forEach(doc => {
                 const fb = doc.data();
-                // CORREÇÃO: Lendo 'fb.date' ao invés de 'fb.createdAt'
                 const data = fb.date && fb.date.toDate ? fb.date.toDate() : null;
                 html += `<tr>
                     <td>${data ? data.toLocaleString('pt-BR') : '-'}</td>
@@ -623,16 +619,13 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             console.log('Carregando dashboard do admin...');
             
-            // Total de usuários
             const usersSnap = await db.collection('users').get();
             const totalUsers = usersSnap.size;
             const totalUsersElement = document.querySelector('#stat-total-users .stat-value');
             if (totalUsersElement) {
                 totalUsersElement.textContent = totalUsers;
             }
-            console.log('Total de usuários:', totalUsers);
             
-            // Novos usuários (7 dias)
             const last7 = new Date();
             last7.setDate(last7.getDate() - 7);
             let newUsers = 0;
@@ -645,29 +638,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (newUsersElement) {
                 newUsersElement.textContent = newUsers;
             }
-            console.log('Novos usuários (7 dias):', newUsers);
             
-            // Total de transações
             const transSnap = await db.collection('transactions').get();
             const totalTransactions = transSnap.size;
             const totalTransactionsElement = document.querySelector('#stat-total-transactions .stat-value');
             if (totalTransactionsElement) {
                 totalTransactionsElement.textContent = totalTransactions;
             }
-            console.log('Total de transações:', totalTransactions);
             
-            // Feedbacks pendentes
             const fbSnap = await db.collection('feedback').get();
             const totalFeedbacks = fbSnap.size;
             const totalFeedbacksElement = document.querySelector('#stat-feedbacks-pending .stat-value');
             if (totalFeedbacksElement) {
                 totalFeedbacksElement.textContent = totalFeedbacks;
             }
-            console.log('Total de feedbacks:', totalFeedbacks);
             
         } catch (error) {
             console.error('Erro ao carregar dashboard:', error);
-            // Define valores padrão em caso de erro
             const statElements = document.querySelectorAll('.stat-value');
             statElements.forEach(el => {
                 if (el.textContent === '-' || el.textContent === '') {
@@ -675,16 +662,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    }
-
-    // Função corrigida para mostrar o painel admin
-    function showAdminPanel() {
-        if (loginSection) loginSection.classList.add('hidden');
-        if (adminPanel) adminPanel.classList.remove('hidden');
-        if (accessDenied) accessDenied.classList.add('hidden');
-        
-        // Inicializa com a aba dashboard
-        switchTab('dashboard');
     }
 
     function getAuthErrorMessage(errorCode) {
