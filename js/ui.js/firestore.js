@@ -57,6 +57,7 @@ export const saveGoal = (data, docId) => saveDocument('goals', data, docId);
 export const saveFeedback = (data) => saveDocument('feedback', data, null);
 
 export const deleteAccount = (docId) => deleteDocument('accounts', docId);
+export const deleteTransaction = (docId) => deleteDocument('transactions', docId);
 export const deleteBudget = (docId) => deleteDocument('budgets', docId);
 export const deleteGoal = (docId) => deleteDocument('goals', docId);
 

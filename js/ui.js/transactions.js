@@ -1,6 +1,6 @@
 import { formatCurrency } from './utils.js';
 import { openModal, closeModal } from './ui.js';
-import { saveTransaction, uploadFile, saveAccount, deleteAccount } from './firestore.js';
+import { saveTransaction, uploadFile, saveAccount, deleteAccount, deleteTransaction } from './firestore.js';
 import { db } from '../../firebase-config.js';
 
 let currentUser, userAccounts, userTransactions, onUpdateCallback;
@@ -24,8 +24,10 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     document.getElementById('payment-form')?.addEventListener('submit', handlePaymentFormSubmit);
     document.getElementById('export-excel-btn')?.addEventListener('click', exportToExcel);
     document.getElementById('export-pdf-btn')?.addEventListener('click', exportToPDF);
-    // Listener para Contas a Pagar
+    
+    // Listeners com delegação de evento
     document.getElementById('payables-page')?.addEventListener('click', handlePayableActions);
+    document.querySelector('#transactions-table tbody')?.addEventListener('click', handleTransactionActions);
 }
 
 // --- LÓGICA DE TRANSAÇÕES ---
@@ -43,7 +45,10 @@ export function loadTransactionsData() {
             <td>${account?.name || 'N/A'}</td>
             <td class="${t.type}">${formatCurrency(t.amount)}</td>
             <td>${t.isPaid ? 'Pago' : 'Pendente'}</td>
-            <td>...</td>`;
+            <td class="transaction-actions">
+                <button class="btn-action btn-edit" data-id="${t.id}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-action btn-delete" data-id="${t.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            </td>`;
         tbody.appendChild(tr);
     });
 }
@@ -75,6 +80,58 @@ async function handleTransactionFormSubmit(e) {
     closeModal('transaction-modal');
     onUpdateCallback();
 }
+
+/**
+ * Manipula as ações de edição e exclusão de uma transação na tabela principal.
+ */
+async function handleTransactionActions(e) {
+    const target = e.target.closest('button');
+    if (!target) return;
+
+    const transactionId = target.dataset.id;
+    if (!transactionId) return;
+
+    // Ação de Excluir
+    if (target.classList.contains('btn-delete')) {
+        if (confirm('Tem certeza que deseja excluir esta transação?')) {
+            try {
+                await deleteTransaction(transactionId);
+                onUpdateCallback(); // Atualiza a UI
+            } catch (error) {
+                console.error('Erro ao excluir transação:', error);
+                alert('Não foi possível excluir a transação.');
+            }
+        }
+    }
+
+    // Ação de Editar
+    if (target.classList.contains('btn-edit')) {
+        const transaction = userTransactions.find(t => t.id === transactionId);
+        if (transaction) {
+            const form = document.getElementById('transaction-form');
+            form.reset();
+
+            // Preenche o formulário com os dados da transação
+            form['transaction-id'].value = transaction.id;
+            form['transaction-type'].value = transaction.type;
+            form['transaction-description'].value = transaction.description;
+            form['transaction-amount'].value = transaction.amount;
+            // Formata a data para o input type="date" (YYYY-MM-DD)
+            form['transaction-date'].value = transaction.date.toDate().toISOString().split('T')[0];
+            form['transaction-category'].value = transaction.category;
+            form['transaction-paid'].checked = transaction.isPaid;
+
+            // Popula e seleciona a conta correta
+            populateAccountOptions(form['transaction-account']);
+            form['transaction-account'].value = transaction.accountId;
+
+            // Altera o título do modal e abre
+            document.getElementById('transaction-modal-title').textContent = 'Editar Transação';
+            openModal('transaction-modal');
+        }
+    }
+}
+
 
 // --- LÓGICA DE CONTAS E CARTÕES ---
 export function loadAccountsData() {
@@ -248,9 +305,9 @@ export function loadPayablesData() {
             categories.overdue.push(t);
         } else if (diffDays === 0) {
             categories.today.push(t);
-        } else if (diffDays > 0 && diffDays <= 7) {
+        } else if (diffDays > 0 && diffDays < 7) {
             categories.next7.push(t);
-        } else if (diffDays > 7 && diffDays <= 30) {
+        } else if (diffDays >= 7 && diffDays <= 30) {
             categories.next30.push(t);
         }
     });
