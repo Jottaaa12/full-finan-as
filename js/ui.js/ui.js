@@ -1,4 +1,5 @@
 import { db } from '../../firebase-config.js';
+import { handleLogin, handleRegister, getAuthErrorMessage } from './auth.js';
 
 // --- Estado e Callbacks do Módulo ---
 let currentUser = null;
@@ -30,6 +31,53 @@ export function initUI(user, loaderCallback) {
     setupNavigation();
     setupModalClosers();
     setupTour();
+
+    // Adicionar este bloco para gerenciar os formulários
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const authError = document.getElementById('auth-error');
+
+    if(loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (authError) authError.textContent = '';
+            
+            const email = loginForm['login-email'].value;
+            const password = loginForm['login-password'].value;
+            
+            try {
+                await handleLogin(email, password);
+                // O onAuthStateChanged vai lidar com a transição de tela.
+            } catch (error) {
+                if (authError) authError.textContent = getAuthErrorMessage(error.code);
+            }
+        });
+    }
+
+    if(registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (authError) authError.textContent = '';
+            
+            const name = registerForm['register-name'].value;
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+            const confirmPassword = registerForm['register-confirm-password'].value;
+            
+            try {
+                await handleRegister(name, email, password, confirmPassword);
+                // O onAuthStateChanged vai lidar com a transição de tela.
+            } catch (error) {
+                if (authError) {
+                    if (error.message === 'As senhas não coincidem.') {
+                        authError.textContent = error.message;
+                    } else {
+                        authError.textContent = getAuthErrorMessage(error.code);
+                    }
+                }
+            }
+        });
+    }
 
     // --- CORREÇÃO: Verifica se o e-mail do usuário está na lista de admins ---
     const adminPanelLink = document.getElementById('admin-panel-link');

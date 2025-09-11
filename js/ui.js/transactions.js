@@ -24,6 +24,8 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     document.getElementById('payment-form')?.addEventListener('submit', handlePaymentFormSubmit);
     document.getElementById('export-excel-btn')?.addEventListener('click', exportToExcel);
     document.getElementById('export-pdf-btn')?.addEventListener('click', exportToPDF);
+    // Listener para Contas a Pagar
+    document.getElementById('payables-page')?.addEventListener('click', handlePayableActions);
 }
 
 // --- LÓGICA DE TRANSAÇÕES ---
@@ -180,7 +182,111 @@ async function handlePaymentFormSubmit(e) {
 }
 
 // --- LÓGICA DE CONTAS A PAGAR ---
-export function loadPayablesData() { /* ... */ }
+async function handlePayableActions(e) {
+    if (e.target.classList.contains('pay-payable-btn')) {
+        const transactionId = e.target.dataset.id;
+        if (!transactionId) return;
+
+        try {
+            const transaction = userTransactions.find(t => t.id === transactionId);
+            if (transaction) {
+                // The saveTransaction function likely expects a plain data object.
+                // We create a new object with only the data, setting isPaid to true.
+                const updatedTransactionData = {
+                    userId: transaction.userId,
+                    type: transaction.type,
+                    description: transaction.description,
+                    amount: transaction.amount,
+                    date: transaction.date, // Keep the original Firestore Timestamp
+                    accountId: transaction.accountId,
+                    category: transaction.category,
+                    isPaid: true // Update the status
+                };
+
+                await saveTransaction(updatedTransactionData, transactionId);
+                onUpdateCallback(); // Refresh UI
+            }
+        } catch (error) {
+            console.error("Error marking transaction as paid:", error);
+            alert("Erro ao marcar a conta como paga.");
+        }
+    }
+}
+
+export function loadPayablesData() {
+    const unpaidTransactions = userTransactions.filter(t => !t.isPaid && t.type === 'despesa');
+
+    const lists = {
+        overdue: document.getElementById('payables-overdue-list'),
+        today: document.getElementById('payables-today-list'),
+        next7: document.getElementById('payables-next7-list'),
+        next30: document.getElementById('payables-next30-list'),
+    };
+
+    // Clear existing lists
+    for (const key in lists) {
+        if (lists[key]) lists[key].innerHTML = '';
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    const categories = {
+        overdue: [],
+        today: [],
+        next7: [],
+        next30: []
+    };
+
+    unpaidTransactions.forEach(t => {
+        const dueDate = t.date.toDate();
+        const diffTime = dueDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / oneDay);
+
+        if (diffDays < 0) {
+            categories.overdue.push(t);
+        } else if (diffDays === 0) {
+            categories.today.push(t);
+        } else if (diffDays > 0 && diffDays <= 7) {
+            categories.next7.push(t);
+        } else if (diffDays > 7 && diffDays <= 30) {
+            categories.next30.push(t);
+        }
+    });
+
+    const renderList = (element, transactions) => {
+        if (!element) return;
+        if (transactions.length === 0) {
+            element.innerHTML = '<li>Nenhuma conta encontrada.</li>';
+            return;
+        }
+        // Sort transactions by date
+        transactions.sort((a, b) => a.date.seconds - b.date.seconds);
+        
+        transactions.forEach(t => {
+            const li = document.createElement('li');
+            li.className = 'payable-item';
+            li.innerHTML = `
+                <div class="payable-info">
+                    <span class="payable-desc">${t.description}</span>
+                    <span class="payable-date">Venc: ${t.date.toDate().toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div class="payable-action">
+                    <span class="payable-amount">${formatCurrency(t.amount)}</span>
+                    <button class="pay-payable-btn" data-id="${t.id}">Marcar como Pago</button>
+                </div>
+            `;
+            element.appendChild(li);
+        });
+    };
+
+    renderList(lists.overdue, categories.overdue);
+    renderList(lists.today, categories.today);
+    renderList(lists.next7, categories.next7);
+    renderList(lists.next30, categories.next30);
+}
+
 
 // --- FUNÇÕES UTILITÁRIAS ---
 function populateAccountOptions(selectElement) {
@@ -210,5 +316,70 @@ function getBillingCycle(card) {
 }
 
 // --- LÓGICA DE EXPORTAÇÃO ---
-function exportToExcel() { /* ... */ }
-function exportToPDF() { /* ... */ }
+function exportToExcel() {
+    if (typeof XLSX === 'undefined') {
+        console.error('SheetJS library (XLSX) not found.');
+        alert('A biblioteca de exportação não foi carregada. Verifique a conexão com a internet.');
+        return;
+    }
+
+    const data = userTransactions.map(t => {
+        const account = userAccounts.find(a => a.id === t.accountId);
+        return {
+            'Data': t.date.toDate().toLocaleDateString('pt-BR'),
+            'Descrição': t.description,
+            'Categoria': t.category,
+            'Conta': account ? account.name : 'N/A',
+            'Valor': t.amount,
+            'Tipo': t.type === 'receita' ? 'Receita' : 'Despesa',
+            'Situação': t.isPaid ? 'Pago' : 'Pendente'
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
+
+    const colWidths = [
+        { wch: 12 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }
+    ];
+    worksheet['!cols'] = colWidths;
+
+    XLSX.writeFile(workbook, 'Extrato_Full_Financas.xlsx');
+}
+
+function exportToPDF() {
+    if (typeof html2pdf === 'undefined') {
+        console.error('html2pdf.js library not found.');
+        alert('A biblioteca de exportação para PDF não foi carregada.');
+        return;
+    }
+
+    const element = document.getElementById('transactions-table');
+    if (!element) {
+        console.error('Element #transactions-table not found.');
+        alert('A tabela de transações não foi encontrada para exportação.');
+        return;
+    }
+
+    const opt = {
+        margin: 0.5,
+        filename: 'Extrato_Full_Financas.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    const clonedElement = element.cloneNode(true);
+    
+    const header = document.createElement('div');
+    header.innerHTML = '<h1>Relatório de Transações</h1>';
+    header.style.textAlign = 'center';
+    header.style.marginBottom = '20px';
+
+    const container = document.createElement('div');
+    container.appendChild(header);
+    container.appendChild(clonedElement);
+
+    html2pdf().from(container).set(opt).save();
+}

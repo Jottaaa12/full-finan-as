@@ -31,7 +31,10 @@ export async function handleLogin(email, password) {
  * @param {string} email O email do usuário.
  * @param {string} password A senha do usuário.
  */
-export async function handleRegister(name, email, password) {
+export async function handleRegister(name, email, password, confirmPassword) {
+    if (password !== confirmPassword) {
+        throw new Error('As senhas não coincidem.');
+    }
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     // Adiciona o usuário à coleção 'users' no Firestore
     await db.collection('users').doc(userCredential.user.uid).set({
