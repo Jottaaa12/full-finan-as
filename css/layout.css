@@ -40,7 +40,14 @@
     padding: 1.5rem 1rem;
     border-right: 1px solid var(--border-color);
     transition: transform 0.3s ease-in-out;
-    z-index: 3000;
+    z-index: 1000; /* Ajustado para ficar acima do conteúdo mas abaixo de modais */
+
+    /* Melhorias de Layout */
+    position: sticky; /* Fixa o sidebar na tela */
+    top: 0; /* Alinha no topo */
+    height: 100vh; /* Ocupa toda a altura da tela */
+    overflow-y: auto; /* Permite rolagem interna se necessário */
+    flex-shrink: 0; /* Impede que o sidebar encolha */
 }
 
 /* CORREÇÃO ADICIONADA: Fundo escuro para o menu mobile */
