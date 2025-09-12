@@ -1,0 +1,365 @@
+/* --- Estilos para Perfil do Usuário --- */
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-section h3 {
+    color: var(--text-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-section h3 i {
+    color: var(--primary-color);
+}
+
+.profile-card {
+    background-color: var(--bg-light);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.profile-form {
+    max-width: 500px;
+}
+
+.profile-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.profile-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.profile-form input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+}
+
+.profile-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.profile-form input[readonly] {
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    cursor: not-allowed;
+}
+
+.profile-form small {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.profile-form button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.profile-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.profile-message.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--secondary-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.profile-message.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* --- Estilos para Foto de Perfil --- */
+.profile-photo-section,
+.currency-section {
+    margin-bottom: 2rem;
+}
+
+.profile-photo-section h4,
+.currency-section h4 {
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.photo-upload-area {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.current-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--border-color);
+    background-color: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.current-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.photo-upload-controls .btn-secondary,
+.photo-upload-controls .btn-danger {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* --- Estilos para Moeda --- */
+.currency-select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.currency-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* --- Estilos para Foto na Barra Lateral --- */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.user-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-color);
+    flex-shrink: 0;
+}
+
+.user-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#user-name-display {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    flex-grow: 1;
+}
+
+/* --- Estilos para Zona de Perigo --- */
+.danger-zone {
+    margin-top: 2rem;
+}
+
+.danger-zone h3 {
+    color: var(--danger-color);
+}
+
+.danger-card {
+    border: 2px solid var(--danger-color);
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.danger-warning {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid var(--danger-color);
+}
+
+.danger-warning h4 {
+    color: var(--danger-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.danger-warning p {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.danger-warning ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.danger-warning li {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.danger-actions {
+    text-align: center;
+}
+
+.btn-danger-large {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger-large:hover {
+    background-color: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger-large:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- Estilos para Modal de Exclusão --- */
+.delete-account-modal {
+    max-width: 600px;
+}
+
+.delete-account-modal h3 {
+    color: var(--danger-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-warning {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.delete-warning h4 {
+    color: var(--danger-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.delete-warning p {
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+}
+
+.delete-warning ul {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.delete-warning li {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.delete-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.delete-progress .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.delete-progress span {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-footer .btn-secondary {
+    flex: 1;
+}
+
+.modal-footer .btn-danger-large {
+    flex: 2;
+}

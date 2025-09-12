@@ -1,0 +1,75 @@
+/* --- Tela de Autenticação --- */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--bg-light);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.auth-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.auth-form button {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.auth-form button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.auth-toggle {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.error-message {
+    color: var(--danger-color);
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+}
+
+.auth-footer {
+    margin-top: 2rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}

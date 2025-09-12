@@ -1,0 +1,471 @@
+/* --- Componentes Genéricos --- */
+.actions-bar {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.export-buttons .btn-secondary {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-secondary {
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+.btn-secondary:hover {
+    background-color: var(--bg-color);
+}
+
+.btn-danger {
+    background-color: transparent;
+    color: var(--danger-color);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+}
+.empty-state-small {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    padding: 1rem 0;
+}
+
+/* --- Modal --- */
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background-color: var(--bg-light);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+#transaction-modal-title, #account-modal-title, #budget-modal-title, #goal-modal-title, #payment-modal-title {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--bg-light);
+    color: var(--text-color);
+}
+
+.form-group small {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+}
+.form-group-checkbox input {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+/* --- Estilos para Recorrência --- */
+.recurrence-options {
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.radio-option:hover {
+    background-color: var(--border-color);
+}
+
+.radio-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
+
+.radio-option span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.recurrence-field {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Estilos para Upload de Arquivo --- */
+.file-input {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0.7rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.file-input:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(124, 58, 237, 0.05);
+}
+
+.file-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.file-input::file-selector-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-right: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.file-input::file-selector-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* Estilo para mostrar arquivo selecionado */
+.file-input.has-file {
+    border-color: var(--secondary-color);
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+/* Loading state */
+.btn-primary:disabled {
+    background-color: var(--text-light);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.upload-progress {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.upload-progress.show {
+    display: flex;
+}
+
+.upload-progress .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* --- Tour Guiado para Novos Usuários --- */
+.tour-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tour-overlay.visible {
+    opacity: 1;
+}
+
+.tour-tooltip {
+    position: fixed;
+    width: 320px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    z-index: 9500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tour-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tour-tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+#tour-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.tour-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+}
+
+.tour-close-btn:hover {
+    color: var(--danger-color);
+}
+
+.tour-tooltip-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    gap: 1rem;
+}
+
+.tour-nav-btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    flex: 1;
+}
+
+.tour-nav-btn:hover:not(:disabled) {
+    background: var(--primary-color-dark);
+    transform: translateY(-1px);
+}
+
+.tour-nav-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.tour-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--text-light);
+}
+
+.tour-tooltip-text {
+    margin: 1rem 0;
+    color: var(--text-color);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.highlight-tour {
+    position: relative;
+    z-index: 9100;
+    box-shadow: 0 0 0 4px var(--primary-color);
+    border-radius: 4px;
+    transition: box-shadow 0.3s ease;
+}
+
+.tour-progress {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.tour-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.tour-progress-dot.active {
+    background: var(--primary-color);
+}
+
+.restart-tour-btn {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1000;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.restart-tour-btn:hover {
+    background: var(--primary-color-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.restart-tour-btn i {
+    font-size: 1rem;
+}
+
+/* --- Estilos para Botões de Ação na Tabela --- */
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* Espaçamento entre os botões */
+}
+
+.btn-action {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: var(--bg-color);
+}
+
+.btn-action.btn-edit:hover {
+    color: var(--info-color);
+}
+
+.btn-action.btn-delete:hover {
+    color: var(--danger-color);
+}
+
+.btn-action.btn-attachment {
+    color: var(--text-light);
+}
+
+.btn-action.btn-attachment:hover {
+    color: var(--primary-color);
+}

@@ -43,7 +43,7 @@ async function onAuthenticated(user) {
     initUI(user, loadPageData);
     initTransactions(user, AppState.accounts, AppState.transactions, refreshAllData);
     initProfile(user);
-    initTools();
+    initTools(AppState.transactions);
     initSupport();
     initBudgetsAndGoals(AppState.currentUser, AppState.accounts, refreshAllData);
     initFeedback(AppState.currentUser);

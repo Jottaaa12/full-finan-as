@@ -1,0 +1,205 @@
+/* --- Loader --- */
+.loader-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader {
+    border: 8px solid var(--border-color);
+    border-top: 8px solid var(--primary-color);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+ @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Layout Principal da Aplicação --- */
+.main-content {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-light);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--border-color);
+    transition: transform 0.3s ease-in-out;
+    z-index: 3000;
+}
+
+/* CORREÇÃO ADICIONADA: Fundo escuro para o menu mobile */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2999;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.sidebar-header {
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.sidebar-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.sidebar-menu {
+    list-style: none;
+    flex-grow: 1;
+}
+
+.sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    color: var(--text-light);
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-menu li a:hover {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.sidebar-menu li a.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.sidebar-menu li a i {
+    margin-right: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#user-name-display {
+    font-weight: 600;
+}
+
+#logout-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 0.7rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+}
+
+#logout-btn:hover {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+
+.page-content {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.page-header p {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.page {
+    animation: fadeIn 0.5s ease;
+}
+
+ @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Estilos para Rodapé BETA --- */
+.beta-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 0.8rem;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.beta-footer span {
+    opacity: 0.9;
+}
+
+.btn-admin {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: var(--info-color);
+    color: white;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    text-align: left;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+.btn-admin:hover {
+    background-color: #2563eb;
+    text-decoration: none;
+}
+.btn-admin i {
+    margin-right: 0.5rem;
+}

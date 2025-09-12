@@ -1,0 +1,142 @@
+/* --- Estilos para Relatórios --- */
+.reports-filters {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reports-filters label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.period-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-light);
+    color: var(--text-color);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.period-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.reports-chart-container {
+    background-color: var(--bg-light);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.reports-chart-container h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.reports-summary {
+    background-color: var(--bg-light);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.reports-summary h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.summary-table-container {
+    overflow-x: auto;
+}
+
+#summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#summary-table th,
+#summary-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#summary-table th {
+    background-color: var(--bg-color);
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#summary-table td {
+    font-size: 1rem;
+}
+
+#summary-table tr:hover {
+    background-color: var(--bg-color);
+}
+
+.summary-category {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.summary-amount {
+    font-weight: 600;
+    color: var(--danger-color);
+}
+
+.summary-percentage {
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+/* Estado vazio para relatórios */
+.reports-empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+}
+
+.reports-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.reports-empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.reports-empty-state p {
+    font-size: 1rem;
+}

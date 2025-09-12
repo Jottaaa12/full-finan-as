@@ -1,0 +1,47 @@
+/* --- Variáveis Globais (Tema) --- */
+:root {
+    --primary-color: #7c3aed; /* Roxo vibrante */
+    --primary-color-dark: #6d28d9;
+    --secondary-color: #10b981; /* Verde para receitas */
+    --danger-color: #ef4444; /* Vermelho para despesas */
+    --warning-color: #f59e0b; /* Amarelo para alertas */
+    --info-color: #3b82f6; /* Azul para informações */
+    --bg-color: #f8fafc; /* Fundo principal claro */
+    --bg-light: #ffffff; /* Fundo de cards e modais */
+    --text-color: #334155; /* Texto principal */
+    --text-light: #64748b; /* Texto secundário */
+    --border-color: #e2e8f0;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --font-family: 'Poppins', sans-serif;
+}
+
+/* --- Reset Básico e Configurações Globais --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none !important;
+}

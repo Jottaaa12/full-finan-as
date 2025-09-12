@@ -1,0 +1,84 @@
+/* --- Seção de Orçamentos --- */
+.budgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.budget-card {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.budget-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.budget-card-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.progress-bar-container {
+    background-color: var(--bg-color);
+    border-radius: 10px;
+    height: 10px;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    background-color: var(--primary-color);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+.budget-card-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* --- Seção de Objetivos --- */
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.goal-card {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.goal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.goal-card-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.goal-card-body .goal-progress-text {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}

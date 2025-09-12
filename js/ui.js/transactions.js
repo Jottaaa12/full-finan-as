@@ -1,4 +1,4 @@
-import { formatCurrency } from './utils.js';
+import { formatCurrency, getBillingCycle } from './utils.js';
 import { openModal, closeModal } from './ui.js';
 import { saveTransaction, uploadFile, saveAccount, deleteAccount, deleteTransaction } from './firestore.js';
 import { db } from '../../firebase-config.js';
@@ -46,6 +46,7 @@ export function loadTransactionsData() {
             <td class="${t.type}">${formatCurrency(t.amount)}</td>
             <td>${t.isPaid ? 'Pago' : 'Pendente'}</td>
             <td class="transaction-actions">
+                ${t.attachmentURL ? `<a href="${t.attachmentURL}" target="_blank" class="btn-action btn-attachment" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>` : ''}
                 <button class="btn-action btn-edit" data-id="${t.id}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
                 <button class="btn-action btn-delete" data-id="${t.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </td>`;
@@ -352,24 +353,6 @@ function populateAccountOptions(selectElement) {
     userAccounts.filter(a => a.type !== 'cartao_credito').forEach(acc => {
         selectElement.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
     });
-}
-
-function getBillingCycle(card) {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const closingDay = card.closingDay;
-    let start, end, due;
-    if (today.getDate() > closingDay) {
-        start = new Date(year, month, closingDay + 1);
-        end = new Date(year, month + 1, closingDay);
-        due = new Date(year, month + 1, card.dueDate);
-    } else {
-        start = new Date(year, month - 1, closingDay + 1);
-        end = new Date(year, month, closingDay);
-        due = new Date(year, month, card.dueDate);
-    }
-    return { start, end, due };
 }
 
 // --- LÓGICA DE EXPORTAÇÃO ---

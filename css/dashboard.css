@@ -1,0 +1,132 @@
+/* --- Componentes do Dashboard --- */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+}
+
+.card-icon {
+    font-size: 1.8rem;
+    padding: 1rem;
+    border-radius: 50%;
+    margin-right: 1rem;
+    background-color: var(--bg-color);
+    color: var(--primary-color);
+}
+.card-icon.income { color: var(--secondary-color); }
+.card-icon.expense { color: var(--danger-color); }
+.card-icon.savings { color: var(--warning-color); }
+
+.card-content h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.card-content p {
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+/* CORREÇÃO ADICIONADA: Unificando estilos de card */
+.chart-container, .list-container, .card-large {
+    background-color: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+/* Contêiner do gráfico principal */
+#main-chart-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin-top: 1rem;
+}
+
+.list-container h3, .chart-container h3 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+#recent-transactions-list, #upcoming-invoices-list {
+    list-style: none;
+}
+
+#recent-transactions-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+#recent-transactions-list li:last-child {
+    border-bottom: none;
+}
+
+.budget-overview-item {
+    margin-bottom: 1rem;
+}
+.budget-overview-item:last-child {
+    margin-bottom: 0;
+}
+
+.budget-overview-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+/* --- Tabela de Transações --- */
+.table-container {
+    background-color: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+#transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#transactions-table th, #transactions-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#transactions-table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+/* CORREÇÃO ADICIONADA: Cores para valores de receita e despesa */
+#transactions-table td.receita {
+    color: var(--secondary-color);
+    font-weight: 600;
+}
+
+#transactions-table td.despesa {
+    color: var(--danger-color);
+    font-weight: 600;
+}

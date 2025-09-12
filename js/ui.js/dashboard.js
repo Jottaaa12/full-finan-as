@@ -1,5 +1,5 @@
 // js/dashboard.js
-import { formatCurrency } from './utils.js';
+import { formatCurrency, getBillingCycle } from './utils.js';
 
 let mainChart = null;
 
@@ -83,6 +83,7 @@ export function loadDashboardData(userAccounts, userTransactions, userBudgets, u
     }
 
     renderBudgetsOverview(userTransactions, userBudgets, userCurrency);
+    renderUpcomingInvoices(userAccounts, userTransactions, userCurrency);
     
     // Prepara dados para o gráfico principal
     const monthlyData = {};
@@ -192,5 +193,75 @@ export function renderBudgetsOverview(userTransactions, userBudgets, userCurrenc
             </div>
         `;
         budgetsOverviewList.appendChild(overviewItem);
+    });
+}
+
+/**
+ * Renderiza a lista de faturas de cartão de crédito próximas do vencimento.
+ * @param {Array} userAccounts As contas do usuário.
+ * @param {Array} userTransactions As transações do usuário.
+ * @param {string} userCurrency A moeda do usuário.
+ */
+function renderUpcomingInvoices(userAccounts, userTransactions, userCurrency) {
+    const listEl = document.getElementById('upcoming-invoices-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+
+    const creditCards = userAccounts.filter(acc => acc.type === 'cartao_credito');
+    const upcomingInvoices = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar para o início do dia
+
+    creditCards.forEach(card => {
+        const billCycle = getBillingCycle(card);
+        
+        // Considerar apenas faturas com vencimento no futuro
+        if (billCycle.due >= today) {
+            const billTransactions = userTransactions.filter(t => 
+                t.accountId === card.id &&
+                t.date.toDate() >= billCycle.start &&
+                t.date.toDate() <= billCycle.end
+            );
+            const billTotal = billTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+            if (billTotal > 0) {
+                upcomingInvoices.push({
+                    cardName: card.name,
+                    dueDate: billCycle.due,
+                    total: billTotal
+                });
+            }
+        }
+    });
+
+    // Ordenar faturas pela data de vencimento mais próxima
+    upcomingInvoices.sort((a, b) => a.dueDate - b.dueDate);
+
+    if (upcomingInvoices.length === 0) {
+        listEl.innerHTML = '<li class="empty-state-small">Nenhuma fatura próxima.</li>';
+        return;
+    }
+
+    upcomingInvoices.slice(0, 4).forEach(invoice => {
+        const li = document.createElement('li');
+        const daysUntilDue = Math.ceil((invoice.dueDate - today) / (1000 * 60 * 60 * 24));
+        let dueDateText;
+        if (daysUntilDue === 0) {
+            dueDateText = 'Vence hoje';
+        } else if (daysUntilDue === 1) {
+            dueDateText = 'Vence amanhã';
+        } else {
+            dueDateText = `Vence em ${daysUntilDue} dias`;
+        }
+
+        li.innerHTML = `
+            <span><i class="fas fa-file-invoice-dollar" style="color: var(--info-color);"></i> ${invoice.cardName}</span>
+            <div class="invoice-details">
+                <small>${dueDateText} (${invoice.dueDate.toLocaleDateString('pt-BR')})</small>
+                <strong>${formatCurrency(invoice.total, userCurrency)}</strong>
+            </div>
+        `;
+        listEl.appendChild(li);
     });
 }
