@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .get();
 
             if (snap.empty) {
-                modalTransacoesList.innerHTML = '<div>Nenhuma transação encontrada.</div>';
+                modalTransacoesList.innerHTML = '<div class="admin-empty-state">Nenhuma transação encontrada.</div>';
                 currentUserTransacoes = [];
                 return;
             }
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const snap = await db.collection('feedback').orderBy('date', 'desc').get();
             if (snap.empty) {
-                feedbackTableBody.innerHTML = '<tr><td colspan="5">Nenhum feedback enviado ainda.</td></tr>';
+                feedbackTableBody.innerHTML = '<tr><td colspan="5" class="admin-empty-state">Nenhum feedback enviado ainda.</td></tr>';
                 return;
             }
             let html = '';

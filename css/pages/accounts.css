@@ -349,3 +349,9 @@
     min-height: 320px;
     max-height: 400px;
 }
+
+.payables-list .empty-state-small {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-light);
+}

@@ -1,4 +1,3 @@
-
 import { updateUserProfile, uploadFile, deleteUserCollections, deleteUserDocument, deleteUserFiles } from './firestore.js';
 import { showMessage, openModal, closeModal } from './ui.js';
 import { auth, db, storage } from '../../firebase-config.js';
@@ -36,6 +35,9 @@ function loadProfileData() {
             document.getElementById('default-currency').value = userData.currency || 'BRL';
             updateProfileImages(userData.profilePhotoURL);
         }
+    }).catch(error => {
+        console.error("Erro ao carregar dados do perfil: ", error);
+        showMessage('profile-message', 'Não foi possível carregar seus dados. Verifique sua conexão.', 'error');
     });
 }
 
@@ -57,7 +59,8 @@ async function handleProfileUpdate(e) {
         document.getElementById('user-name-display').textContent = newName;
         showMessage('profile-message', 'Nome atualizado com sucesso!', 'success');
     } catch (error) {
-        showMessage('profile-message', 'Erro ao atualizar nome.', 'error');
+        console.error('Erro ao atualizar nome:', error);
+        showMessage('profile-message', 'Não foi possível atualizar o perfil. Tente novamente.', 'error');
     }
 }
 
@@ -74,7 +77,8 @@ async function handlePasswordChange(e) {
         form.reset();
         showMessage('password-message', 'Senha alterada com sucesso!', 'success');
     } catch (error) {
-        const message = error.code === 'auth/wrong-password' ? 'Senha atual incorreta.' : 'Erro ao alterar senha.';
+        console.error("Erro ao alterar senha:", error);
+        const message = error.code === 'auth/wrong-password' ? 'Senha atual incorreta.' : 'Erro ao alterar senha. Tente novamente.';
         showMessage('password-message', message, 'error');
     }
 }
@@ -89,7 +93,8 @@ async function handlePhotoUpload(e) {
         updateProfileImages(photoURL);
         showMessage('personalization-message', 'Foto de perfil atualizada!', 'success');
     } catch (error) {
-        showMessage('personalization-message', 'Erro ao enviar a foto.', 'error');
+        console.error("Erro ao enviar a foto:", error);
+        showMessage('personalization-message', 'Não foi possível enviar a foto. Tente novamente.', 'error');
     }
 }
 
@@ -100,7 +105,8 @@ async function handlePhotoRemove() {
         updateProfileImages(null);
         showMessage('personalization-message', 'Foto removida com sucesso!', 'success');
     } catch (error) {
-        showMessage('personalization-message', 'Erro ao remover a foto.', 'error');
+        console.error("Erro ao remover a foto:", error);
+        showMessage('personalization-message', 'Não foi possível remover a foto. Tente novamente.', 'error');
     }
 }
 
@@ -116,15 +122,24 @@ function validateDeleteEmail(e) {
 }
 
 async function handleDeleteAccount() {
+    const deleteButton = document.getElementById('confirm-delete-btn');
+    deleteButton.disabled = true;
+    deleteButton.textContent = 'Excluindo...';
+
     try {
         await deleteUserCollections(currentUser.uid);
         await deleteUserDocument(currentUser.uid);
         await deleteUserFiles(currentUser.uid);
         await currentUser.delete();
-        alert('Conta deletada com sucesso.');
+        alert('Conta deletada com sucesso. Você será desconectado.');
         window.location.reload();
     } catch (error) {
-        alert('Erro ao deletar conta. Por favor, faça login novamente e tente outra vez.');
+        console.error("Erro ao deletar conta:", error);
+        // Assuming there's a message element in the delete modal, e.g., with id 'delete-account-message'
+        showMessage('delete-account-message', 'Erro ao deletar conta. Por favor, faça login novamente e tente outra vez.', 'error');
+        deleteButton.disabled = false;
+        deleteButton.textContent = 'Eu entendo as consequências, deletar minha conta';
+        // It might be safer to sign the user out if deletion fails partially
         auth.signOut();
     }
 }

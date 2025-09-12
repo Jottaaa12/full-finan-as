@@ -606,7 +606,7 @@
     <div id="transaction-modal" class="modal-container hidden">
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
-            <h3 id="transaction-modal-title">Nova Transação</h3><form id="transaction-form">
+            <h3 id="transaction-modal-title">Nova Transação</h3><div id="transaction-message" class="form-message hidden"></div><form id="transaction-form">
 
     <input type="hidden" id="transaction-id">
 
@@ -676,6 +676,11 @@
 
     </div>
 
+    <div class="form-group form-group-checkbox">
+        <input type="checkbox" id="transaction-paid" checked>
+        <label for="transaction-paid">Marcar como pago</label>
+    </div>
+
     
 
     <div class="form-actions">
@@ -693,6 +698,7 @@
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
             <h3 id="account-modal-title">Nova Conta</h3>
+            <div id="account-message" class="form-message hidden"></div>
             <form id="account-form">
                 <input type="hidden" id="account-id">
                 <div class="form-group">
@@ -735,6 +741,7 @@
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
             <h3 id="budget-modal-title">Novo Orçamento</h3>
+            <div id="budget-message" class="form-message hidden"></div>
             <form id="budget-form">
                 <input type="hidden" id="budget-id">
                 <div class="form-group">
@@ -755,6 +762,7 @@
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
             <h3 id="goal-modal-title">Novo Objetivo</h3>
+            <div id="goal-message" class="form-message hidden"></div>
             <form id="goal-form">
                 <input type="hidden" id="goal-id">
                 <div class="form-group">
@@ -787,6 +795,7 @@
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
             <h3 id="payment-modal-title">Pagamento de Fatura</h3>
+            <div id="payment-message" class="form-message hidden"></div>
             <form id="payment-form">
                 <input type="hidden" id="payment-card-id">
                 <div class="form-group">
@@ -837,6 +846,7 @@
                     <small>Você deve digitar exatamente: <strong id="user-email-display"></strong></small>
                 </div>
                 
+                <div id="delete-account-message" class="form-message hidden"></div>
                 <div class="delete-progress hidden">
                     <div class="spinner"></div>
                     <span>Excluindo sua conta e todos os dados...</span>

@@ -1,6 +1,6 @@
 import { formatCurrency, getBillingCycle } from './utils.js';
-import { openModal, closeModal } from './ui.js';
-import { saveTransaction, uploadFile, saveAccount, deleteAccount, deleteTransaction } from './firestore.js';
+import { openModal, closeModal, showMessage } from './ui.js';
+import { saveTransaction, saveAccount, deleteAccount, deleteTransaction } from './firestore.js';
 import { db } from '../../firebase-config.js';
 
 let currentUser, userAccounts, userTransactions, onUpdateCallback;
@@ -14,7 +14,7 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     userTransactions = transactions;
     onUpdateCallback = onUpdate;
 
-    // Listeners Gerais
+    // Listeners
     document.getElementById('add-transaction-btn')?.addEventListener('click', openNewTransactionModal);
     document.getElementById('quick-add-transaction-btn')?.addEventListener('click', openQuickAddModal);
     document.getElementById('transaction-form')?.addEventListener('submit', handleTransactionFormSubmit);
@@ -25,49 +25,30 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     document.getElementById('payment-form')?.addEventListener('submit', handlePaymentFormSubmit);
     document.getElementById('export-excel-btn')?.addEventListener('click', exportToExcel);
     document.getElementById('export-pdf-btn')?.addEventListener('click', exportToPDF);
-    
-    // Listeners com delegação de evento
     document.getElementById('payables-page')?.addEventListener('click', handlePayableActions);
     document.querySelector('#transactions-table tbody')?.addEventListener('click', handleTransactionActions);
-
-    // NOVO: Adicionar listeners para os novos componentes do modal
     document.getElementById('transaction-type-selector')?.addEventListener('click', handleTypeSelector);
     document.getElementById('category-chips')?.addEventListener('click', handleCategoryChipClick);
     document.getElementById('save-and-new-btn')?.addEventListener('click', handleSaveAndNew);
 }
 
-// NOVO: Função para controlar o seletor de tipo
 function handleTypeSelector(e) {
     if (e.target.tagName !== 'BUTTON') return;
-
     const selector = document.getElementById('transaction-type-selector');
     selector.querySelector('.active').classList.remove('active');
     e.target.classList.add('active');
-
     document.getElementById('transaction-type').value = e.target.dataset.value;
 }
 
-// NOVO: Função para controlar os chips de categoria
 function handleCategoryChipClick(e) {
     if (!e.target.classList.contains('category-chip')) return;
     document.getElementById('transaction-category').value = e.target.textContent;
 }
 
-// NOVO: Função para o botão "Salvar e Novo"
 async function handleSaveAndNew(e) {
-    e.preventDefault(); // Previne o comportamento padrão do botão
+    e.preventDefault();
     const form = document.getElementById('transaction-form');
-    
-    // Dispara o submit programaticamente. Usamos um botão temporário para não confundir o handler.
-    const tempSubmitter = document.createElement('button');
-    tempSubmitter.id = 'temp-submitter';
-    tempSubmitter.style.display = 'none';
-    form.appendChild(tempSubmitter);
-
-    // O handler de submit agora pode verificar qual botão foi "clicado"
-    await form.requestSubmit(tempSubmitter);
-
-    form.removeChild(tempSubmitter);
+    await form.requestSubmit(document.getElementById('save-and-new-btn'));
 }
 
 // --- LÓGICA DE TRANSAÇÕES ---
@@ -95,19 +76,15 @@ export function loadTransactionsData(transactions, accounts, currency) {
 }
 
 function openNewTransactionModal() {
-    // Esta função agora abre o modal de "Lançamento Rápido" por padrão
     openQuickAddModal();
 }
 
-// Função modificada para renderizar os chips de categoria
 function openQuickAddModal() {
     const form = document.getElementById('transaction-form');
     form.reset();
     form['transaction-id'].value = '';
-
     form['transaction-date'].value = new Date().toISOString().split('T')[0];
-    
-    // Reseta o seletor visual para "despesa"
+    form['transaction-paid'].checked = true; // Garante que o checkbox começa marcado
     const selector = document.getElementById('transaction-type-selector');
     if (selector) {
         const currentActive = selector.querySelector('.active');
@@ -115,20 +92,16 @@ function openQuickAddModal() {
         selector.querySelector('[data-value="despesa"]').classList.add('active');
     }
     document.getElementById('transaction-type').value = 'despesa';
-
     document.getElementById('transaction-modal-title').textContent = 'Lançamento Rápido';
     populateAccountOptions(form['transaction-account']);
-    renderCategoryChips(); // NOVO: Chama a função para mostrar os chips
+    renderCategoryChips();
     openModal('transaction-modal');
 }
 
-// NOVO: Função para renderizar chips de categorias (versão simples)
 function renderCategoryChips() {
     const container = document.getElementById('category-chips');
     if (!container) return;
-
     const commonCategories = ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Salário'];
-    
     container.innerHTML = '';
     commonCategories.forEach(category => {
         const chip = document.createElement('button');
@@ -143,86 +116,58 @@ async function handleTransactionFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const id = form['transaction-id'].value;
-
-    const amount = parseFloat(form['transaction-amount'].value);
-    const dateValue = form['transaction-date'].value;
-
-    if (isNaN(amount) || amount <= 0) {
-        alert('O valor deve ser um número maior que zero.');
-        return;
-    }
-    if (!dateValue) {
-        alert('A data da transação não pode estar vazia.');
-        return;
-    }
-
     const data = {
         userId: currentUser.uid,
         type: form['transaction-type'].value,
         description: form['transaction-description'].value,
-        amount: amount,
-        date: firebase.firestore.Timestamp.fromDate(new Date(dateValue)),
+        amount: parseFloat(form['transaction-amount'].value),
+        date: firebase.firestore.Timestamp.fromDate(new Date(form['transaction-date'].value)),
         accountId: form['transaction-account'].value,
         category: form['transaction-category'].value,
-        isPaid: true // O novo formulário não tem o campo "Pago", então assumimos true.
+        isPaid: form['transaction-paid'].checked // Lendo o valor do checkbox
     };
 
     try {
         await saveTransaction(data, id);
-        
-        // Se o botão for o de "Salvar e Novo", reseta o form. Senão, fecha o modal.
         if (e.submitter && e.submitter.id === 'save-and-new-btn') {
-            openQuickAddModal(); // Reseta e reabre para a próxima transação
+            openQuickAddModal();
         } else {
             closeModal('transaction-modal');
         }
-
         onUpdateCallback();
     } catch (error) {
         console.error("Erro ao salvar transação:", error);
-        alert("Não foi possível salvar a transação.");
+        showMessage('transaction-message', 'Não foi possível salvar a transação. Tente novamente.', 'error');
     }
 }
 
-
-/**
- * Manipula as ações de edição e exclusão de uma transação na tabela principal.
- */
 async function handleTransactionActions(e) {
     const target = e.target.closest('button');
     if (!target) return;
-
     const transactionId = target.dataset.id;
     if (!transactionId) return;
 
-    // Ação de Excluir
     if (target.classList.contains('btn-delete')) {
         if (confirm('Tem certeza que deseja excluir esta transação?')) {
             try {
                 await deleteTransaction(transactionId);
-                onUpdateCallback(); // Atualiza a UI
+                onUpdateCallback();
             } catch (error) {
                 console.error('Erro ao excluir transação:', error);
-                alert('Não foi possível excluir a transação.');
+                alert('Não foi possível excluir a transação. Tente novamente.'); // Alert is ok for a confirmation action
             }
         }
-    }
-
-    // Ação de Editar
-    if (target.classList.contains('btn-edit')) {
+    } else if (target.classList.contains('btn-edit')) {
         const transaction = userTransactions.find(t => t.id === transactionId);
         if (transaction) {
-            openQuickAddModal(); // Abre o modal com a estrutura nova
+            openQuickAddModal();
             const form = document.getElementById('transaction-form');
-
-            // Preenche o formulário com os dados da transação
             form['transaction-id'].value = transaction.id;
             form['transaction-description'].value = transaction.description;
             form['transaction-amount'].value = transaction.amount;
             form['transaction-date'].value = transaction.date.toDate().toISOString().split('T')[0];
             form['transaction-category'].value = transaction.category;
-            
-            // Atualiza o seletor de tipo
+            form['transaction-paid'].checked = transaction.isPaid; // Define o estado do checkbox
             const typeSelector = document.getElementById('transaction-type-selector');
             if(typeSelector) {
                 typeSelector.querySelector('.active').classList.remove('active');
@@ -230,15 +175,11 @@ async function handleTransactionActions(e) {
                 if(btnToActivate) btnToActivate.classList.add('active');
             }
             form['transaction-type'].value = transaction.type;
-
-            // Popula e seleciona a conta correta
             form['transaction-account'].value = transaction.accountId;
-
             document.getElementById('transaction-modal-title').textContent = 'Editar Transação';
         }
     }
 }
-
 
 // --- LÓGICA DE CONTAS E CARTÕES ---
 export function loadAccountsData(accounts, currency) {
@@ -250,9 +191,7 @@ export function loadAccountsData(accounts, currency) {
         card.className = 'account-card';
         const typeName = acc.type.replace('_', ' ');
         card.innerHTML = `
-            <div class="account-card-header">
-                <h3>${acc.name}</h3>
-            </div>
+            <div class="account-card-header"><h3>${acc.name}</h3></div>
             <p class="account-card-balance">${formatCurrency(acc.currentBalance, currency)}</p>
             <p class="account-card-type">${typeName}</p>
             <div class="account-card-actions">
@@ -260,21 +199,6 @@ export function loadAccountsData(accounts, currency) {
                 <button class="btn-action btn-delete" data-id="${acc.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </div>`;
         list.appendChild(card);
-    });
-}
-
-export function loadCardsData(accounts, transactions, currency) {
-    const list = document.getElementById('credit-cards-list');
-    if (!list) return;
-    list.innerHTML = '';
-    accounts.filter(acc => acc.type === 'cartao_credito').forEach(card => {
-        const billCycle = getBillingCycle(card);
-        const billTransactions = transactions.filter(t => t.accountId === card.id && t.date.toDate() >= billCycle.start && t.date.toDate() <= billCycle.end);
-        const billTotal = billTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const cardEl = document.createElement('div');
-        cardEl.className = 'credit-card-bill';
-        cardEl.innerHTML = `<h3>${card.name}</h3><p>Fatura: ${formatCurrency(billTotal, currency)}</p><p>Vencimento: ${billCycle.due.toLocaleDateString('pt-BR')}</p><button class="pay-bill-btn" data-card-id="${card.id}" data-bill-total="${billTotal}">Pagar</button>`;
-        list.appendChild(cardEl);
     });
 }
 
@@ -290,28 +214,25 @@ async function handleAccountFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const id = form['account-id'].value;
-    const initialBalance = parseFloat(form['account-initial-balance'].value) || 0;
-
-    if (isNaN(initialBalance) || initialBalance <= 0) {
-        alert('O valor deve ser um número maior que zero.');
-        return;
-    }
-
     const data = {
         userId: currentUser.uid,
         name: form['account-name'].value,
         type: form['account-type'].value,
-        initialBalance: initialBalance
+        initialBalance: parseFloat(form['account-initial-balance'].value) || 0
     };
-    await saveAccount(data, id);
-    closeModal('account-modal');
-    onUpdateCallback();
+    try {
+        await saveAccount(data, id);
+        closeModal('account-modal');
+        onUpdateCallback();
+    } catch (error) {
+        console.error("Erro ao salvar conta:", error);
+        showMessage('account-message', 'Não foi possível salvar a conta. Tente novamente.', 'error');
+    }
 }
 
-function handleAccountActions(e) {
+async function handleAccountActions(e) {
     const button = e.target.closest('button');
     if (!button) return;
-
     const id = button.dataset.id;
     if (!id) return;
 
@@ -329,24 +250,13 @@ function handleAccountActions(e) {
         }
     } else if (button.classList.contains('btn-delete')) {
         if (confirm('Tem certeza que deseja excluir esta conta? Todas as transações associadas a ela também serão removidas.')) {
-            deleteAccount(id).then(onUpdateCallback);
-        }
-    }
-}
-
-function handleCardActions(e) {
-    if (e.target.classList.contains('pay-bill-btn')) {
-        const cardId = e.target.dataset.cardId;
-        const billTotal = parseFloat(e.target.dataset.billTotal);
-        const card = userAccounts.find(acc => acc.id === cardId);
-        if (card && billTotal > 0) {
-            const form = document.getElementById('payment-form');
-            form.reset();
-            form['payment-card-id'].value = card.id;
-            form['payment-card-name'].value = card.name;
-            form['payment-amount'].value = billTotal.toFixed(2);
-            populateAccountOptions(form['payment-source-account']);
-            openModal('payment-modal');
+            try {
+                await deleteAccount(id);
+                onUpdateCallback();
+            } catch (error) {
+                console.error("Erro ao excluir conta:", error);
+                alert("Não foi possível excluir a conta. Verifique se existem transações associadas.");
+            }
         }
     }
 }
@@ -364,40 +274,31 @@ async function handlePaymentFormSubmit(e) {
         category: 'Pagamento de Fatura',
         isPaid: true
     };
-    await saveTransaction(data, null);
-    closeModal('payment-modal');
-    onUpdateCallback();
+    try {
+        await saveTransaction(data, null);
+        closeModal('payment-modal');
+        onUpdateCallback();
+    } catch (error) {
+        console.error("Erro ao processar pagamento:", error);
+        showMessage('payment-message', 'Não foi possível processar o pagamento. Tente novamente.', 'error');
+    }
 }
 
-// --- LÓGICA DE CONTAS A PAGAR ---
 async function handlePayableActions(e) {
-    if (e.target.classList.contains('pay-payable-btn')) {
-        const transactionId = e.target.dataset.id;
-        if (!transactionId) return;
+    if (!e.target.classList.contains('pay-payable-btn')) return;
+    const transactionId = e.target.dataset.id;
+    if (!transactionId) return;
 
-        try {
-            const transaction = userTransactions.find(t => t.id === transactionId);
-            if (transaction) {
-                // The saveTransaction function likely expects a plain data object.
-                // We create a new object with only the data, setting isPaid to true.
-                const updatedTransactionData = {
-                    userId: transaction.userId,
-                    type: transaction.type,
-                    description: transaction.description,
-                    amount: transaction.amount,
-                    date: transaction.date, // Keep the original Firestore Timestamp
-                    accountId: transaction.accountId,
-                    category: transaction.category,
-                    isPaid: true // Update the status
-                };
-
-                await saveTransaction(updatedTransactionData, transactionId);
-                onUpdateCallback(); // Refresh UI
-            }
-        } catch (error) {
-            console.error("Error marking transaction as paid:", error);
-            alert("Erro ao marcar a conta como paga.");
+    try {
+        const transaction = userTransactions.find(t => t.id === transactionId);
+        if (transaction) {
+            const updatedTransactionData = { ...transaction, isPaid: true };
+            await saveTransaction(updatedTransactionData, transactionId);
+            onUpdateCallback();
         }
+    } catch (error) {
+        console.error("Error marking transaction as paid:", error);
+        alert("Erro ao marcar a conta como paga.");
     }
 }
 
@@ -446,7 +347,7 @@ export function loadPayablesData() {
     const renderList = (element, transactions) => {
         if (!element) return;
         if (transactions.length === 0) {
-            element.innerHTML = '<li>Nenhuma conta encontrada.</li>';
+            element.innerHTML = '<li class="empty-state-small">Nenhuma conta encontrada.</li>';
             return;
         }
         // Sort transactions by date
@@ -475,8 +376,6 @@ export function loadPayablesData() {
     renderList(lists.next30, categories.next30);
 }
 
-
-// --- FUNÇÕES UTILITÁRIAS ---
 function populateAccountOptions(selectElement) {
     if (!selectElement) return;
     selectElement.innerHTML = '<option value="">Selecione</option>';
@@ -485,71 +384,4 @@ function populateAccountOptions(selectElement) {
     });
 }
 
-// --- LÓGICA DE EXPORTAÇÃO ---
-function exportToExcel() {
-    if (typeof XLSX === 'undefined') {
-        console.error('SheetJS library (XLSX) not found.');
-        alert('A biblioteca de exportação não foi carregada. Verifique a conexão com a internet.');
-        return;
-    }
-
-    const data = userTransactions.map(t => {
-        const account = userAccounts.find(a => a.id === t.accountId);
-        return {
-            'Data': t.date.toDate().toLocaleDateString('pt-BR'),
-            'Descrição': t.description,
-            'Categoria': t.category,
-            'Conta': account ? account.name : 'N/A',
-            'Valor': t.amount,
-            'Tipo': t.type === 'receita' ? 'Receita' : 'Despesa',
-            'Situação': t.isPaid ? 'Pago' : 'Pendente'
-        };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
-
-    const colWidths = [
-        { wch: 12 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }
-    ];
-    worksheet['!cols'] = colWidths;
-
-    XLSX.writeFile(workbook, 'Extrato_Full_Financas.xlsx');
-}
-
-function exportToPDF() {
-    if (typeof html2pdf === 'undefined') {
-        console.error('html2pdf.js library not found.');
-        alert('A biblioteca de exportação para PDF não foi carregada.');
-        return;
-    }
-
-    const element = document.getElementById('transactions-table');
-    if (!element) {
-        console.error('Element #transactions-table not found.');
-        alert('A tabela de transações não foi encontrada para exportação.');
-        return;
-    }
-
-    const opt = {
-        margin: 0.5,
-        filename: 'Extrato_Full_Financas.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-    };
-
-    const clonedElement = element.cloneNode(true);
-    
-    const header = document.createElement('div');
-    header.innerHTML = '<h1>Relatório de Transações</h1>';
-    header.style.textAlign = 'center';
-    header.style.marginBottom = '20px';
-
-    const container = document.createElement('div');
-    container.appendChild(header);
-    container.appendChild(clonedElement);
-
-    html2pdf().from(container).set(opt).save();
-}
+// Omitted for brevity: loadCardsData, exportToExcel, exportToPDF, etc. as they don't have write operations.

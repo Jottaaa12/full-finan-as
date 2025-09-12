@@ -341,6 +341,15 @@ body {
 .details-list li {
     margin-bottom: 0.6rem;
     word-break: break-word;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #e2e8f0; /* --border-color */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.details-list li:last-child {
+    border-bottom: none;
 }
 @media (max-width: 900px) {
     .user-details-grid {
@@ -560,3 +569,11 @@ body {
         margin-right: 0.4rem;
     }
 } 
+
+/* Estilo para estados vazios no painel admin */
+.admin-empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b; /* --text-light */
+    font-style: italic;
+}
