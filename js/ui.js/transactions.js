@@ -394,7 +394,7 @@ export function loadCardsData(accounts, transactions, currency) {
         cardElement.className = 'credit-card-card'; // Similar to account-card
 
         // Calculate current bill
-        const cycle = getBillingCycle(card.closeDay);
+        const cycle = getBillingCycle(card);
         const currentBill = transactions.filter(t =>
             t.accountId === card.id &&
             t.date.toDate() >= cycle.start &&
