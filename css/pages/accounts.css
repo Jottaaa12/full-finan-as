@@ -43,6 +43,31 @@
     gap: 0.5rem;
 }
 
+.account-card-actions .btn-action {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.account-card-actions .btn-action:hover {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.account-card-actions .btn-action.btn-delete:hover {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
 /* --- Seção de Cartões de Crédito --- */
 .credit-cards-grid {
     display: grid;

@@ -150,6 +150,7 @@ export function initUI(user, loaderCallback) {
 export function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.classList.remove('hidden');
         modal.classList.add('active');
     }
 }
@@ -161,6 +162,7 @@ export function openModal(modalId) {
 export function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.classList.add('hidden');
         modal.classList.remove('active');
     }
 }

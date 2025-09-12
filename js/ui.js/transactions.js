@@ -142,7 +142,17 @@ export function loadAccountsData() {
     userAccounts.filter(acc => acc.type !== 'cartao_credito').forEach(acc => {
         const card = document.createElement('div');
         card.className = 'account-card';
-        card.innerHTML = `<h3>${acc.name}</h3><p>${formatCurrency(acc.currentBalance)}</p><div><button class="edit-account-btn" data-id="${acc.id}">Editar</button><button class="delete-account-btn" data-id="${acc.id}">Excluir</button></div>`;
+        const typeName = acc.type.replace('_', ' ');
+        card.innerHTML = `
+            <div class="account-card-header">
+                <h3>${acc.name}</h3>
+            </div>
+            <p class="account-card-balance">${formatCurrency(acc.currentBalance)}</p>
+            <p class="account-card-type">${typeName}</p>
+            <div class="account-card-actions">
+                <button class="btn-action btn-edit" data-id="${acc.id}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-action btn-delete" data-id="${acc.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            </div>`;
         list.appendChild(card);
     });
 }
@@ -186,19 +196,26 @@ async function handleAccountFormSubmit(e) {
 }
 
 function handleAccountActions(e) {
-    const id = e.target.dataset.id;
-    if (e.target.classList.contains('edit-account-btn')) {
+    const button = e.target.closest('button');
+    if (!button) return;
+
+    const id = button.dataset.id;
+    if (!id) return;
+
+    if (button.classList.contains('btn-edit')) {
         const acc = userAccounts.find(a => a.id === id);
-        const form = document.getElementById('account-form');
-        form.reset();
-        form['account-id'].value = acc.id;
-        form['account-name'].value = acc.name;
-        form['account-type'].value = acc.type;
-        form['account-initial-balance'].value = acc.initialBalance;
-        document.getElementById('account-modal-title').textContent = 'Editar Conta';
-        openModal('account-modal');
-    } else if (e.target.classList.contains('delete-account-btn')) {
-        if (confirm('Tem certeza?')) {
+        if (acc) {
+            const form = document.getElementById('account-form');
+            form.reset();
+            form['account-id'].value = acc.id;
+            form['account-name'].value = acc.name;
+            form['account-type'].value = acc.type;
+            form['account-initial-balance'].value = acc.initialBalance;
+            document.getElementById('account-modal-title').textContent = 'Editar Conta';
+            openModal('account-modal');
+        }
+    } else if (button.classList.contains('btn-delete')) {
+        if (confirm('Tem certeza que deseja excluir esta conta? Todas as transações associadas a ela também serão removidas.')) {
             deleteAccount(id).then(onUpdateCallback);
         }
     }
