@@ -48,7 +48,16 @@
     height: 100vh; /* Ocupa toda a altura da tela */
     overflow-y: auto; /* Permite rolagem interna se necessário */
     flex-shrink: 0; /* Impede que o sidebar encolha */
+
+    /* Esconde a barra de rolagem */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE e Edge */
 }
+
+.sidebar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari e Opera */
+}
+
 
 /* CORREÇÃO ADICIONADA: Fundo escuro para o menu mobile */
 .sidebar-overlay {
