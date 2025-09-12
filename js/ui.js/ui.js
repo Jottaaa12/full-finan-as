@@ -1,4 +1,5 @@
 // js/ui.js/ui.js
+// CORREÇÃO: Arquivo refatorado para corrigir navegação, modais e menu mobile.
 import { db } from '../../firebase-config.js';
 import { handleLogin, handleRegister, getAuthErrorMessage } from './auth.js';
 
@@ -123,22 +124,50 @@ export function initUI(user, loaderCallback) {
 }
 
 /**
- * Mostra a página solicitada e esconde as outras.
- * @param {string} pageId - O ID da página a ser exibida.
+ * Abre um modal específico.
+ * @param {string} modalId - O ID do modal a ser aberto.
  */
-export function showPage(pageId) {
+export function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+/**
+ * Fecha um modal específico.
+ * @param {string} modalId - O ID do modal a ser fechado.
+ */
+export function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+/**
+ * CORREÇÃO: A função 'showPage' foi renomeada para 'navigateTo' e exportada conforme solicitado.
+ * Esta função agora é o ponto central para a navegação de páginas.
+ * @param {string} pageId - O ID da página a ser exibida (ex: 'dashboard').
+ */
+export function navigateTo(pageId) {
+    const targetPageId = `${pageId}-page`;
     pages.forEach(page => {
-        page.classList.toggle('active', page.id === pageId);
+        // A classe 'active' controla a visibilidade da página
+        page.classList.toggle('active', page.id === targetPageId);
     });
 
     navLinks.forEach(link => {
         link.classList.toggle('active', link.getAttribute('data-page') === pageId);
     });
 
-    // Fecha a sidebar em modo mobile ao trocar de página
-    if (sidebar.classList.contains('active')) {
-        sidebar.classList.remove('active');
-        sidebarOverlay.classList.remove('active');
+    // Fecha a sidebar automaticamente ao navegar em modo mobile
+    const closeMenu = () => {
+        if (sidebar) sidebar.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+    };
+    if (sidebar && sidebar.classList.contains('active')) {
+        closeMenu();
     }
 
     // Carrega os dados da página, se necessário
@@ -149,44 +178,75 @@ export function showPage(pageId) {
 
 // --- Funções Internas ---
 
+/**
+ * CORREÇÃO: A lógica do menu mobile foi refeita para ser mais robusta.
+ * Usa funções explícitas de abrir/fechar em vez de 'toggle' para evitar inconsistências de estado.
+ */
 function setupMobileMenu() {
     const menuToggle = document.getElementById('menu-toggle');
+
+    const openMenu = () => {
+        if (sidebar) sidebar.classList.add('active');
+        if (sidebarOverlay) sidebarOverlay.classList.add('active');
+    };
+
+    const closeMenu = () => {
+        if (sidebar) sidebar.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+    };
+
     if (menuToggle) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
         });
     }
 
     if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        });
+        // Clicar no overlay sempre fecha o menu.
+        sidebarOverlay.addEventListener('click', closeMenu);
     }
 }
 
+/**
+ * Configura os links de navegação principal.
+ */
 function setupNavigation() {
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const pageId = link.getAttribute('data-page');
             if (pageId) {
-                showPage(pageId);
+                // CORREÇÃO: Chama a função 'navigateTo' renomeada.
+                navigateTo(pageId);
             }
         });
     });
 }
 
+/**
+ * CORREÇÃO: A lógica para fechar modais foi melhorada.
+ * Agora, usa delegação de eventos no 'document' para garantir que todos os modais,
+ * mesmo os criados dinamicamente, possam ser fechados de forma confiável.
+ */
 function setupModalClosers() {
-    const modalClosers = document.querySelectorAll('.modal-close, .modal-overlay');
-    modalClosers.forEach(closer => {
-        closer.addEventListener('click', () => {
-            const modal = closer.closest('.modal');
-            if (modal) {
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        // Fecha o modal se o clique for no overlay, no botão 'x' ou em um ícone dentro do botão.
+        if (target.classList.contains('modal-overlay') || target.closest('.modal-close')) {
+            const modal = target.closest('.modal');
+            if (modal && modal.id) {
+                // Reutiliza a função exportada para manter a consistência.
+                closeModal(modal.id);
+            } else if (modal) {
+                // Fallback para caso o modal não tenha um ID.
                 modal.classList.remove('active');
             }
-        });
+        }
     });
 }
 
