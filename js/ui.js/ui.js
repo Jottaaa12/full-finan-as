@@ -21,6 +21,26 @@ const appContainer = document.getElementById('app-container');
 // --- Funções Exportadas ---
 
 /**
+ * Exibe uma mensagem temporária em um elemento da UI.
+ * @param {string} elementId - O ID do elemento onde a mensagem será exibida.
+ * @param {string} message - A mensagem a ser exibida.
+ * @param {string} type - O tipo de mensagem ('success', 'error', 'info').
+ */
+export function showMessage(elementId, message, type = 'info') {
+    const messageElement = document.getElementById(elementId);
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.className = `message ${type}`; // Reset classes and apply new one
+        messageElement.classList.remove('hidden');
+
+        // Esconde a mensagem após 5 segundos
+        setTimeout(() => {
+            messageElement.classList.add('hidden');
+        }, 5000);
+    }
+}
+
+/**
  * Prepara os formulários de login e registro.
  * Esta função é chamada quando nenhum usuário está logado.
  */
