@@ -505,3 +505,72 @@
         right: 1.5rem;
     }
 }
+
+/* NOVO CSS em css/components.css */
+/* Estilo para o Seletor de Tipo (Segmented Control) */
+.segmented-control {
+    display: flex;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.segmented-control .sg-btn {
+    flex: 1;
+    padding: 0.7rem 0.5rem;
+    background-color: transparent;
+    border: none;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.segmented-control .sg-btn:not(:last-child) {
+    border-right: 1px solid var(--border-color);
+}
+
+.segmented-control .sg-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Estilo para os Chips de Categoria */
+.category-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.category-chip {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.3rem 0.8rem;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.category-chip:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Estilo para as Ações do Formulário */
+.form-actions {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.form-actions .btn-primary, .form-actions .btn-secondary {
+    width: 100%;
+    padding: 0.9rem;
+}

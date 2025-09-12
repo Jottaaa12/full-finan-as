@@ -231,3 +231,33 @@
         padding: 1rem 0.5rem;
     }
 }
+
+/* NOVO CSS em css/responsive.css */ 
+@media (max-width: 768px) {
+    /* Transforma o modal em um "Bottom Sheet" */
+    .modal-container {
+        align-items: flex-end; /* Alinha no final da tela */
+        padding: 0;
+    }
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 16px 16px 0 0; /* Arredonda cantos superiores */
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+    
+    /* Ajuste para os botões de ação em telas pequenas */
+    .form-actions {
+        grid-template-columns: 1fr;
+    }
+}

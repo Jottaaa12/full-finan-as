@@ -606,101 +606,85 @@
     <div id="transaction-modal" class="modal-container hidden">
         <div class="modal-content">
             <button class="modal-close-btn">&times;</button>
-            <h3 id="transaction-modal-title">Nova Transação</h3>
-            <form id="transaction-form">
-                <input type="hidden" id="transaction-id">
-                <div class="form-group">
-                    <label for="transaction-type">Tipo</label>
-                    <select id="transaction-type" required>
-                        <option value="despesa">Despesa</option>
-                        <option value="receita">Receita</option>
-                        <option value="transferencia">Transferência</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="transaction-description">Descrição</label>
-                    <input type="text" id="transaction-description" required>
-                </div>
-                <div class="form-group">
-                    <label for="transaction-amount">Valor</label>
-                    <input type="number" step="0.01" id="transaction-amount" placeholder="R$ 0,00" required>
-                </div>
-                <div class="form-group">
-                    <label for="transaction-date">Data</label>
-                    <input type="date" id="transaction-date" required>
-                </div>
-                 <div class="form-group">
-                    <label for="transaction-account">Conta</label>
-                    <select id="transaction-account" required>
-                        <option value="">Selecione uma conta</option>
-                        <!-- Opções de conta carregadas via JS -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="transaction-category">Categoria</label>
-                    <input type="text" id="transaction-category" list="common-categories" placeholder="Ex: Alimentação" required>
-                    <datalist id="common-categories">
-                        <option value="Alimentação"></option>
-                        <option value="Transporte"></option>
-                        <option value="Moradia"></option>
-                        <option value="Lazer"></option>
-                        <option value="Saúde"></option>
-                        <option value="Salário"></option>
-                    </datalist>
-                </div>
-                <div class="form-group form-group-checkbox">
-                    <input type="checkbox" id="transaction-paid">
-                    <label for="transaction-paid">Pago/Recebido</label>
-                </div>
-                
-                <div class="form-group">
-                    <label for="transaction-attachment">Anexar Comprovante (Opcional)</label>
-                    <input type="file" id="transaction-attachment" accept="image/*,.pdf" class="file-input">
-                    <small>Aceita imagens (JPG, PNG, GIF) e PDFs. Máximo 5MB.</small>
-                    <div id="upload-progress" class="upload-progress">
-                        <div class="spinner"></div>
-                        <span>Enviando comprovante...</span>
-                    </div>
-                </div>
-                
-                <!-- Seção de Recorrência -->
-                <div class="form-group form-group-checkbox">
-                    <input type="checkbox" id="transaction-recurring">
-                    <label for="transaction-recurring">Repetir esta transação</label>
-                </div>
-                
-                <div id="recurrence-options" class="recurrence-options hidden">
-                    <div class="form-group">
-                        <label>Tipo de Recorrência:</label>
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="recurrence-type" value="monthly" checked>
-                                <span>Fixo Mensal</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="recurrence-type" value="installment">
-                                <span>Parcelado</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div id="monthly-options" class="recurrence-field">
-                        <div class="form-group">
-                            <label for="recurrence-months">Durante quantos meses?</label>
-                            <input type="number" id="recurrence-months" min="2" max="60" placeholder="Ex: 12">
-                        </div>
-                    </div>
-                    
-                    <div id="installment-options" class="recurrence-field hidden">
-                        <div class="form-group">
-                            <label for="recurrence-installments">Número total de parcelas</label>
-                            <input type="number" id="recurrence-installments" min="2" max="60" placeholder="Ex: 12">
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-primary">Salvar</button>
-            </form>
+            <h3 id="transaction-modal-title">Nova Transação</h3><form id="transaction-form">
+
+    <input type="hidden" id="transaction-id">
+
+
+
+    <div class="form-group">
+
+        <label>Tipo</label>
+
+        <div id="transaction-type-selector" class="segmented-control">
+
+            <button type="button" class="sg-btn active" data-value="despesa">Despesa</button>
+
+            <button type="button" class="sg-btn" data-value="receita">Receita</button>
+
+            <button type="button" class="sg-btn" data-value="transferencia">Transferência</button>
+
+        </div>
+
+        <input type="hidden" id="transaction-type" value="despesa">
+
+    </div>
+
+
+
+    <div class="form-group">
+
+        <label for="transaction-description">Descrição</label>
+
+        <input type="text" id="transaction-description" required>
+
+    </div>
+
+    <div class="form-group">
+
+        <label for="transaction-amount">Valor</label>
+
+        <input type="number" step="0.01" id="transaction-amount" placeholder="R$ 0,00" required>
+
+    </div>
+
+    <div class="form-group">
+
+        <label for="transaction-date">Data</label>
+
+        <input type="date" id="transaction-date" required>
+
+    </div>
+
+    <div class="form-group">
+
+        <label for="transaction-account">Conta</label>
+
+        <select id="transaction-account" required></select>
+
+    </div>
+
+    <div class="form-group">
+
+        <label for="transaction-category">Categoria</label>
+
+        <input type="text" id="transaction-category" list="common-categories" required>
+
+        <div id="category-chips" class="category-chips-container">
+
+            </div>
+
+    </div>
+
+    
+
+    <div class="form-actions">
+
+        <button type="submit" id="save-transaction-btn" class="btn-primary">Salvar</button>
+
+        <button type="button" id="save-and-new-btn" class="btn-secondary">Salvar e Novo</button>
+
+    </div></form>
         </div>
     </div>
 
