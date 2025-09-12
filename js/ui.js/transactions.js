@@ -384,4 +384,67 @@ function populateAccountOptions(selectElement) {
     });
 }
 
-// Omitted for brevity: loadCardsData, exportToExcel, exportToPDF, etc. as they don't have write operations.
+
+export function loadCardsData(accounts, transactions, currency) {
+    const list = document.getElementById('credit-cards-list');
+    if (!list) return;
+    list.innerHTML = '';
+    accounts.filter(acc => acc.type === 'cartao_credito').forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'credit-card-card'; // Similar to account-card
+
+        // Calculate current bill
+        const cycle = getBillingCycle(card.closeDay);
+        const currentBill = transactions.filter(t =>
+            t.accountId === card.id &&
+            t.date.toDate() >= cycle.start &&
+            t.date.toDate() <= cycle.end
+        ).reduce((sum, t) => sum + t.amount, 0);
+
+        cardElement.innerHTML = `
+            <div class="credit-card-header">
+                <h3>${card.name}</h3>
+                <span class="card-flag">${card.flag || ''}</span>
+            </div>
+            <div class="credit-card-body">
+                <p>Fatura Atual: <span class="card-bill">${formatCurrency(currentBill, currency)}</span></p>
+                <p>Limite: <span class="card-limit">${formatCurrency(card.limit, currency)}</span></p>
+            </div>
+            <div class="credit-card-footer">
+                 <p>Vencimento: Dia ${card.dueDay}</p>
+                 <p>Fechamento: Dia ${card.closeDay}</p>
+            </div>
+            <div class="credit-card-actions">
+                <button class="btn-action btn-pay" data-id="${card.id}" data-name="${card.name}" data-bill="${currentBill}" title="Pagar Fatura"><i class="fas fa-dollar-sign"></i></button>
+                <button class="btn-action btn-edit" data-id="${card.id}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
+                <button class="btn-action btn-delete" data-id="${card.id}" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `;
+        list.appendChild(cardElement);
+    });
+}
+
+
+function handleCardActions(e) {
+    const button = e.target.closest('button');
+    if (!button) return;
+    const id = button.dataset.id;
+    if (!id) return;
+
+    if (button.classList.contains('btn-edit')) {
+        console.log('Edit card:', id);
+    } else if (button.classList.contains('btn-delete')) {
+        console.log('Delete card:', id);
+    } else if (button.classList.contains('btn-pay')) {
+        console.log('Pay card:', id);
+    }
+}
+
+function exportToExcel() {
+    console.log('Export to Excel not implemented yet.');
+}
+
+function exportToPDF() {
+    console.log('Export to PDF not implemented yet.');
+}
+
