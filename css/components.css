@@ -77,8 +77,10 @@
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Alinha no topo */
+    overflow-y: auto; /* Permite rolagem */
     z-index: 1000;
+    padding: 2rem 0; /* Espaçamento para não colar nas bordas */
     animation: fadeIn 0.3s;
 }
 

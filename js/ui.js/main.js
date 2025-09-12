@@ -48,7 +48,8 @@ async function onAuthenticated(user) {
     initBudgetsAndGoals(AppState.currentUser, AppState.accounts, refreshAllData);
     initFeedback(AppState.currentUser);
 
-    navigateTo('dashboard');
+    const lastPage = localStorage.getItem('lastVisitedPage') || 'dashboard';
+    navigateTo(lastPage);
 }
 
 /**

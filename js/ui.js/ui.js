@@ -183,6 +183,9 @@ export function navigateTo(pageId) {
         link.classList.toggle('active', link.getAttribute('data-page') === pageId);
     });
 
+    // Salva a última página visitada
+    localStorage.setItem('lastVisitedPage', pageId);
+
     // Fecha a sidebar automaticamente ao navegar em modo mobile
     const closeMenu = () => {
         if (sidebar) sidebar.classList.remove('active');
