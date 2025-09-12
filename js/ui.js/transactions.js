@@ -16,6 +16,10 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
 
     // Listeners Gerais
     document.getElementById('add-transaction-btn')?.addEventListener('click', openNewTransactionModal);
+    
+    // 1. ADICIONAR NOVO LISTENER PARA O FAB
+    document.getElementById('quick-add-transaction-btn')?.addEventListener('click', openQuickAddModal);
+    
     document.getElementById('transaction-form')?.addEventListener('submit', handleTransactionFormSubmit);
     document.getElementById('add-account-btn')?.addEventListener('click', openNewAccountModal);
     document.getElementById('account-form')?.addEventListener('submit', handleAccountFormSubmit);
@@ -62,6 +66,23 @@ function openNewTransactionModal() {
     populateAccountOptions(form['transaction-account']);
     openModal('transaction-modal');
 }
+
+// 2. CRIAR A NOVA FUNÇÃO openQuickAddModal
+function openQuickAddModal() {
+    const form = document.getElementById('transaction-form');
+    form.reset();
+    form['transaction-id'].value = '';
+
+    // 3. Pré-preencher com valores padrão para agilizar
+    form['transaction-date'].value = new Date().toISOString().split('T')[0]; // Data de hoje
+    form['transaction-type'].value = 'despesa'; // Tipo mais comum
+    form['transaction-paid'].checked = true;    // Geralmente já está pago
+
+    document.getElementById('transaction-modal-title').textContent = 'Lançamento Rápido';
+    populateAccountOptions(form['transaction-account']);
+    openModal('transaction-modal');
+}
+
 
 async function handleTransactionFormSubmit(e) {
     e.preventDefault();

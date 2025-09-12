@@ -471,3 +471,37 @@
 .btn-action.btn-attachment:hover {
     color: var(--primary-color);
 }
+
+/* NOVO CÓDIGO */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 999;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease;
+}
+
+.fab:hover {
+    background-color: var(--primary-color-dark);
+    transform: scale(1.05);
+}
+
+/* Ajuste para telas menores */
+ @media (max-width: 768px) {
+    .fab {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
