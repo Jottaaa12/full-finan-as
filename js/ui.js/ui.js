@@ -173,8 +173,8 @@ export function closeModal(modalId) {
 export function navigateTo(pageId) {
     const targetPageId = `${pageId}-page`;
     pages.forEach(page => {
-        // A classe 'active' controla a visibilidade da página
-        page.classList.toggle('active', page.id === targetPageId);
+        // Adiciona 'hidden' se não for a página de destino, remove se for.
+        page.classList.toggle('hidden', page.id !== targetPageId);
     });
 
     navLinks.forEach(link => {
