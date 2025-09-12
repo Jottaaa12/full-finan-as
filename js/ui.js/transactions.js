@@ -29,6 +29,7 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     document.querySelector('#transactions-table tbody')?.addEventListener('click', handleTransactionActions);
     document.getElementById('transaction-type-selector')?.addEventListener('click', handleTypeSelector);
     document.getElementById('category-chips')?.addEventListener('click', handleCategoryChipClick);
+    document.getElementById('account-type')?.addEventListener('change', (e) => toggleCreditCardFields(e.target.value));
     document.getElementById('save-and-new-btn')?.addEventListener('click', handleSaveAndNew);
 }
 
@@ -43,6 +44,18 @@ function handleTypeSelector(e) {
 function handleCategoryChipClick(e) {
     if (!e.target.classList.contains('category-chip')) return;
     document.getElementById('transaction-category').value = e.target.textContent;
+}
+
+function toggleCreditCardFields(type) {
+    const creditCardFields = document.getElementById('credit-card-fields');
+    const initialBalanceGroup = document.getElementById('initial-balance-group');
+    if (type === 'cartao_credito') {
+        creditCardFields.classList.remove('hidden');
+        initialBalanceGroup.classList.add('hidden');
+    } else {
+        creditCardFields.classList.add('hidden');
+        initialBalanceGroup.classList.remove('hidden');
+    }
 }
 
 async function handleSaveAndNew(e) {
@@ -207,6 +220,7 @@ function openNewAccountModal() {
     form.reset();
     form['account-id'].value = '';
     document.getElementById('account-modal-title').textContent = 'Nova Conta';
+    toggleCreditCardFields(form['account-type'].value);
     openModal('account-modal');
 }
 
@@ -214,12 +228,21 @@ async function handleAccountFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const id = form['account-id'].value;
+    const type = form['account-type'].value;
     const data = {
         userId: currentUser.uid,
         name: form['account-name'].value,
-        type: form['account-type'].value,
+        type: type,
         initialBalance: parseFloat(form['account-initial-balance'].value) || 0
     };
+
+    if (type === 'cartao_credito') {
+        data.limit = parseFloat(form['card-limit'].value) || 0;
+        data.closeDay = parseInt(form['card-closing-day'].value, 10);
+        data.dueDay = parseInt(form['card-due-day'].value, 10);
+        delete data.initialBalance; // Not needed for credit cards
+    }
+
     try {
         await saveAccount(data, id);
         closeModal('account-modal');
@@ -244,7 +267,17 @@ async function handleAccountActions(e) {
             form['account-id'].value = acc.id;
             form['account-name'].value = acc.name;
             form['account-type'].value = acc.type;
-            form['account-initial-balance'].value = acc.initialBalance;
+            
+            toggleCreditCardFields(acc.type);
+
+            if (acc.type === 'cartao_credito') {
+                form['card-limit'].value = acc.limit;
+                form['card-closing-day'].value = acc.closeDay;
+                form['card-due-day'].value = acc.dueDay;
+            } else {
+                form['account-initial-balance'].value = acc.initialBalance;
+            }
+
             document.getElementById('account-modal-title').textContent = 'Editar Conta';
             openModal('account-modal');
         }
