@@ -29,6 +29,11 @@ function calculateCompoundInterest(e) {
     const annualRate = parseFloat(form['interest-rate'].value) || 0;
     const years = parseFloat(form['period-years'].value) || 0;
 
+    if (initialAmount < 0 || monthlyContribution < 0 || annualRate < 0 || years < 0) {
+        alert('Os valores para o cálculo de juros compostos não podem ser negativos.');
+        return;
+    }
+
     const monthlyRate = annualRate / 100 / 12;
     const months = years * 12;
 

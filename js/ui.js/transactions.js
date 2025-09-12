@@ -67,12 +67,25 @@ async function handleTransactionFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const id = form['transaction-id'].value;
+
+    const amount = parseFloat(form['transaction-amount'].value);
+    const dateValue = form['transaction-date'].value;
+
+    if (isNaN(amount) || amount <= 0) {
+        alert('O valor deve ser um número maior que zero.');
+        return;
+    }
+    if (!dateValue) {
+        alert('A data da transação não pode estar vazia.');
+        return;
+    }
+
     const data = {
         userId: currentUser.uid,
         type: form['transaction-type'].value,
         description: form['transaction-description'].value,
-        amount: parseFloat(form['transaction-amount'].value),
-        date: firebase.firestore.Timestamp.fromDate(new Date(form['transaction-date'].value)),
+        amount: amount,
+        date: firebase.firestore.Timestamp.fromDate(new Date(dateValue)),
         accountId: form['transaction-account'].value,
         category: form['transaction-category'].value,
         isPaid: form['transaction-paid'].checked
@@ -157,17 +170,17 @@ export function loadAccountsData() {
     });
 }
 
-export function loadCardsData() {
+export function loadCardsData(accounts, transactions, currency) {
     const list = document.getElementById('credit-cards-list');
     if (!list) return;
     list.innerHTML = '';
-    userAccounts.filter(acc => acc.type === 'cartao_credito').forEach(card => {
+    accounts.filter(acc => acc.type === 'cartao_credito').forEach(card => {
         const billCycle = getBillingCycle(card);
-        const billTransactions = userTransactions.filter(t => t.accountId === card.id && t.date.toDate() >= billCycle.start && t.date.toDate() <= billCycle.end);
+        const billTransactions = transactions.filter(t => t.accountId === card.id && t.date.toDate() >= billCycle.start && t.date.toDate() <= billCycle.end);
         const billTotal = billTransactions.reduce((sum, t) => sum + t.amount, 0);
         const cardEl = document.createElement('div');
         cardEl.className = 'credit-card-bill';
-        cardEl.innerHTML = `<h3>${card.name}</h3><p>Fatura: ${formatCurrency(billTotal)}</p><p>Vencimento: ${billCycle.due.toLocaleDateString('pt-BR')}</p><button class="pay-bill-btn" data-card-id="${card.id}" data-bill-total="${billTotal}">Pagar</button>`;
+        cardEl.innerHTML = `<h3>${card.name}</h3><p>Fatura: ${formatCurrency(billTotal, currency)}</p><p>Vencimento: ${billCycle.due.toLocaleDateString('pt-BR')}</p><button class="pay-bill-btn" data-card-id="${card.id}" data-bill-total="${billTotal}">Pagar</button>`;
         list.appendChild(cardEl);
     });
 }
@@ -184,11 +197,18 @@ async function handleAccountFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const id = form['account-id'].value;
+    const initialBalance = parseFloat(form['account-initial-balance'].value) || 0;
+
+    if (isNaN(initialBalance) || initialBalance <= 0) {
+        alert('O valor deve ser um número maior que zero.');
+        return;
+    }
+
     const data = {
         userId: currentUser.uid,
         name: form['account-name'].value,
         type: form['account-type'].value,
-        initialBalance: parseFloat(form['account-initial-balance'].value) || 0
+        initialBalance: initialBalance
     };
     await saveAccount(data, id);
     closeModal('account-modal');

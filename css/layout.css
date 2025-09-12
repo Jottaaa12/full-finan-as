@@ -180,17 +180,13 @@
 
 /* --- Estilos para Rodapé BETA --- */
 .beta-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
+    width: 100%;
+    padding: 2rem 0 1rem; /* 2rem top padding, 1rem bottom */
     text-align: center;
-    padding: 8px 0;
-    font-size: 0.8rem;
-    z-index: 1000;
-    backdrop-filter: blur(10px);
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 2rem; /* Space above the footer */
+    border-top: 1px solid var(--border-color);
 }
 
 .beta-footer span {
