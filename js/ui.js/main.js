@@ -1,5 +1,5 @@
 import { initAuth } from './auth.js';
-import { initUI, navigateTo } from './ui.js';
+import { initUI, navigateTo, initAuthForms } from './ui.js';
 import { fetchAllData, calculateAllBalances } from './firestore.js';
 import { loadDashboardData } from './dashboard.js';
 import { initTransactions, loadTransactionsData, loadAccountsData, loadCardsData, loadPayablesData } from './transactions.js';
@@ -62,6 +62,7 @@ function onSignedOut() {
     AppState = { currentUser: null, accounts: [], transactions: [], budgets: [], goals: [], currency: 'BRL' };
     document.getElementById('main-content').classList.add('hidden');
     document.getElementById('auth-container').classList.remove('hidden');
+    initAuthForms(); // Inicializa os formulários de autenticação
 }
 
 /**
