@@ -5,8 +5,9 @@ import { db } from '../../firebase-config.js';
 
 let currentUser, userAccounts, userTransactions, onUpdateCallback;
 
-// js/ui.js/transactions.js
-// ... (início do arquivo)
+/**
+ * Inicializa o módulo de transações, contas e cartões.
+ */
 export function initTransactions(user, accounts, transactions, onUpdate) {
     currentUser = user;
     userAccounts = accounts;
@@ -15,10 +16,7 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
 
     // Listeners Gerais
     document.getElementById('add-transaction-btn')?.addEventListener('click', openNewTransactionModal);
-    
-    // 1. ADICIONAR NOVO LISTENER PARA O FAB
     document.getElementById('quick-add-transaction-btn')?.addEventListener('click', openQuickAddModal);
-    
     document.getElementById('transaction-form')?.addEventListener('submit', handleTransactionFormSubmit);
     document.getElementById('add-account-btn')?.addEventListener('click', openNewAccountModal);
     document.getElementById('account-form')?.addEventListener('submit', handleAccountFormSubmit);
@@ -36,49 +34,40 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
     document.getElementById('transaction-type-selector')?.addEventListener('click', handleTypeSelector);
     document.getElementById('category-chips')?.addEventListener('click', handleCategoryChipClick);
     document.getElementById('save-and-new-btn')?.addEventListener('click', handleSaveAndNew);
-
 }
 
-// NOVO: Função para controlar o seletor de tipofunction handleTypeSelector(e) {
-
+// NOVO: Função para controlar o seletor de tipo
+function handleTypeSelector(e) {
     if (e.target.tagName !== 'BUTTON') return;
 
-
-
     const selector = document.getElementById('transaction-type-selector');
-
     selector.querySelector('.active').classList.remove('active');
-
     e.target.classList.add('active');
 
-
-
     document.getElementById('transaction-type').value = e.target.dataset.value;
+}
 
-}// NOVO: Função para controlar os chips de categoriafunction handleCategoryChipClick(e) {
-
+// NOVO: Função para controlar os chips de categoria
+function handleCategoryChipClick(e) {
     if (!e.target.classList.contains('category-chip')) return;
-
     document.getElementById('transaction-category').value = e.target.textContent;
+}
 
-}// NOVO: Função para o botão "Salvar e Novo"async function handleSaveAndNew() {
-
+// NOVO: Função para o botão "Salvar e Novo"
+async function handleSaveAndNew(e) {
+    e.preventDefault(); // Previne o comportamento padrão do botão
     const form = document.getElementById('transaction-form');
-
-    // Simula o clique no botão de submit para acionar a validação e o salvamento
-
-    await form.requestSubmit(document.getElementById('save-transaction-btn'));
-
     
+    // Dispara o submit programaticamente. Usamos um botão temporário para não confundir o handler.
+    const tempSubmitter = document.createElement('button');
+    tempSubmitter.id = 'temp-submitter';
+    tempSubmitter.style.display = 'none';
+    form.appendChild(tempSubmitter);
 
-    // Se o salvamento foi bem-sucedido (modal fechou e abriu de novo), 
+    // O handler de submit agora pode verificar qual botão foi "clicado"
+    await form.requestSubmit(tempSubmitter);
 
-    // a lógica de reabertura já está no openQuickAddModal
-
-    // Vamos chamar a função para reabrir e limpar o formulário.
-
-    openQuickAddModal();
-
+    form.removeChild(tempSubmitter);
 }
 
 // --- LÓGICA DE TRANSAÇÕES ---
@@ -106,82 +95,49 @@ export function loadTransactionsData(transactions, accounts, currency) {
 }
 
 function openNewTransactionModal() {
-    const form = document.getElementById('transaction-form');
-    form.reset();
-    form['transaction-id'].value = '';
-    document.getElementById('transaction-modal-title').textContent = 'Nova Transação';
-    populateAccountOptions(form['transaction-account']);
-    openModal('transaction-modal');
+    // Esta função agora abre o modal de "Lançamento Rápido" por padrão
+    openQuickAddModal();
 }
 
-// Função modificada para renderizar os chips de categoriafunction openQuickAddModal() {
-
+// Função modificada para renderizar os chips de categoria
+function openQuickAddModal() {
     const form = document.getElementById('transaction-form');
-
     form.reset();
-
     form['transaction-id'].value = '';
-
-
 
     form['transaction-date'].value = new Date().toISOString().split('T')[0];
-
     
-
     // Reseta o seletor visual para "despesa"
-
     const selector = document.getElementById('transaction-type-selector');
-
-    selector.querySelector('.active')?.classList.remove('active');
-
-    selector.querySelector('[data-value="despesa"]').classList.add('active');
-
+    if (selector) {
+        const currentActive = selector.querySelector('.active');
+        if(currentActive) currentActive.classList.remove('active');
+        selector.querySelector('[data-value="despesa"]').classList.add('active');
+    }
     document.getElementById('transaction-type').value = 'despesa';
 
-
-
     document.getElementById('transaction-modal-title').textContent = 'Lançamento Rápido';
-
     populateAccountOptions(form['transaction-account']);
-
     renderCategoryChips(); // NOVO: Chama a função para mostrar os chips
-
     openModal('transaction-modal');
-
 }
 
-// NOVO: Função para renderizar chips de categorias (versão simples)function renderCategoryChips() {
-
+// NOVO: Função para renderizar chips de categorias (versão simples)
+function renderCategoryChips() {
     const container = document.getElementById('category-chips');
-
     if (!container) return;
 
-
-
-    // Em uma versão futura, estas categorias viriam das mais usadas pelo usuário.
-
     const commonCategories = ['Alimentação', 'Transporte', 'Moradia', 'Lazer', 'Salário'];
-
     
-
     container.innerHTML = '';
-
     commonCategories.forEach(category => {
-
         const chip = document.createElement('button');
-
         chip.type = 'button';
-
         chip.className = 'category-chip';
-
         chip.textContent = category;
-
         container.appendChild(chip);
-
     });
-
 }
-
 
 async function handleTransactionFormSubmit(e) {
     e.preventDefault();
@@ -208,15 +164,26 @@ async function handleTransactionFormSubmit(e) {
         date: firebase.firestore.Timestamp.fromDate(new Date(dateValue)),
         accountId: form['transaction-account'].value,
         category: form['transaction-category'].value,
-        isPaid: true // Hardcoded to true for the new form
+        isPaid: true // O novo formulário não tem o campo "Pago", então assumimos true.
     };
-    await saveTransaction(data, id);
-    // Don't close modal if 'save and new' was clicked, handleSaveAndNew will reopen it.
-    if (e.submitter && e.submitter.id === 'save-transaction-btn') {
-        closeModal('transaction-modal');
+
+    try {
+        await saveTransaction(data, id);
+        
+        // Se o botão for o de "Salvar e Novo", reseta o form. Senão, fecha o modal.
+        if (e.submitter && e.submitter.id === 'save-and-new-btn') {
+            openQuickAddModal(); // Reseta e reabre para a próxima transação
+        } else {
+            closeModal('transaction-modal');
+        }
+
+        onUpdateCallback();
+    } catch (error) {
+        console.error("Erro ao salvar transação:", error);
+        alert("Não foi possível salvar a transação.");
     }
-    onUpdateCallback();
 }
+
 
 /**
  * Manipula as ações de edição e exclusão de uma transação na tabela principal.
@@ -245,28 +212,28 @@ async function handleTransactionActions(e) {
     if (target.classList.contains('btn-edit')) {
         const transaction = userTransactions.find(t => t.id === transactionId);
         if (transaction) {
-            openQuickAddModal(); // Use this to get the new form structure
+            openQuickAddModal(); // Abre o modal com a estrutura nova
             const form = document.getElementById('transaction-form');
 
             // Preenche o formulário com os dados da transação
             form['transaction-id'].value = transaction.id;
-            
-            // Handle new type selector
-            const typeSelector = document.getElementById('transaction-type-selector');
-            typeSelector.querySelector('.active').classList.remove('active');
-            const newActiveButton = typeSelector.querySelector(`[data-value="${transaction.type}"]`);
-            if (newActiveButton) newActiveButton.classList.add('active');
-            form['transaction-type'].value = transaction.type;
-
             form['transaction-description'].value = transaction.description;
             form['transaction-amount'].value = transaction.amount;
             form['transaction-date'].value = transaction.date.toDate().toISOString().split('T')[0];
             form['transaction-category'].value = transaction.category;
+            
+            // Atualiza o seletor de tipo
+            const typeSelector = document.getElementById('transaction-type-selector');
+            if(typeSelector) {
+                typeSelector.querySelector('.active').classList.remove('active');
+                const btnToActivate = typeSelector.querySelector(`[data-value="${transaction.type}"]`);
+                if(btnToActivate) btnToActivate.classList.add('active');
+            }
+            form['transaction-type'].value = transaction.type;
 
             // Popula e seleciona a conta correta
             form['transaction-account'].value = transaction.accountId;
 
-            // Altera o título do modal
             document.getElementById('transaction-modal-title').textContent = 'Editar Transação';
         }
     }
