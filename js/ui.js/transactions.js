@@ -31,19 +31,19 @@ export function initTransactions(user, accounts, transactions, onUpdate) {
 }
 
 // --- LÓGICA DE TRANSAÇÕES ---
-export function loadTransactionsData() {
+export function loadTransactionsData(transactions, accounts, currency) {
     const tbody = document.querySelector('#transactions-table tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    [...userTransactions].sort((a, b) => b.date.seconds - a.date.seconds).forEach(t => {
-        const account = userAccounts.find(acc => acc.id === t.accountId);
+    [...transactions].sort((a, b) => b.date.seconds - a.date.seconds).forEach(t => {
+        const account = accounts.find(acc => acc.id === t.accountId);
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${t.date.toDate().toLocaleDateString('pt-BR')}</td>
             <td>${t.description}</td>
             <td>${t.category}</td>
             <td>${account?.name || 'N/A'}</td>
-            <td class="${t.type}">${formatCurrency(t.amount)}</td>
+            <td class="${t.type}">${formatCurrency(t.amount, currency)}</td>
             <td>${t.isPaid ? 'Pago' : 'Pendente'}</td>
             <td class="transaction-actions">
                 ${t.attachmentURL ? `<a href="${t.attachmentURL}" target="_blank" class="btn-action btn-attachment" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>` : ''}
@@ -148,11 +148,11 @@ async function handleTransactionActions(e) {
 
 
 // --- LÓGICA DE CONTAS E CARTÕES ---
-export function loadAccountsData() {
+export function loadAccountsData(accounts, currency) {
     const list = document.getElementById('accounts-list');
     if (!list) return;
     list.innerHTML = '';
-    userAccounts.filter(acc => acc.type !== 'cartao_credito').forEach(acc => {
+    accounts.filter(acc => acc.type !== 'cartao_credito').forEach(acc => {
         const card = document.createElement('div');
         card.className = 'account-card';
         const typeName = acc.type.replace('_', ' ');
@@ -160,7 +160,7 @@ export function loadAccountsData() {
             <div class="account-card-header">
                 <h3>${acc.name}</h3>
             </div>
-            <p class="account-card-balance">${formatCurrency(acc.currentBalance)}</p>
+            <p class="account-card-balance">${formatCurrency(acc.currentBalance, currency)}</p>
             <p class="account-card-type">${typeName}</p>
             <div class="account-card-actions">
                 <button class="btn-action btn-edit" data-id="${acc.id}" title="Editar"><i class="fas fa-pencil-alt"></i></button>
