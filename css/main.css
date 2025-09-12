@@ -33,6 +33,10 @@ body {
     line-height: 1.6;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
 a {
     color: var(--primary-color);
     text-decoration: none;

@@ -152,6 +152,7 @@ export function openModal(modalId) {
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('active');
+        document.body.classList.add('modal-open');
     }
 }
 
@@ -164,6 +165,7 @@ export function closeModal(modalId) {
     if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
     }
 }
 
@@ -261,15 +263,11 @@ function setupNavigation() {
 function setupModalClosers() {
     document.addEventListener('click', (e) => {
         const target = e.target;
-        // Fecha o modal se o clique for no overlay, no botão 'x' ou em um ícone dentro do botão.
-        if (target.classList.contains('modal-overlay') || target.closest('.modal-close')) {
-            const modal = target.closest('.modal');
+        // Fecha o modal se o clique for no overlay (modal-container) ou no botão de fechar.
+        if (target.classList.contains('modal-container') || target.closest('.modal-close-btn')) {
+            const modal = target.closest('.modal-container');
             if (modal && modal.id) {
-                // Reutiliza a função exportada para manter a consistência.
                 closeModal(modal.id);
-            } else if (modal) {
-                // Fallback para caso o modal não tenha um ID.
-                modal.classList.remove('active');
             }
         }
     });
