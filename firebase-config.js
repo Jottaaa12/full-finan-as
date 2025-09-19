@@ -11,14 +11,14 @@
 // =============================================================================
 
 // Configuração do Firebase para o App Full Finanças
-// SUBSTITUA ESTES VALORES PELOS DO SEU PROJETO FIREBASE
+// As chaves agora são lidas das Variáveis de Ambiente configuradas na Vercel
 const firebaseConfig = {
-  apiKey: "AIzaSyB9xYQv5_iyGcDGLPz-M8DSHp_DFWxLd6o",
-  authDomain: "full-financas-web.firebaseapp.com",
-  projectId: "full-financas-web",
-  storageBucket: "full-financas-web.firebasestorage.app",
-  messagingSenderId: "771231898402",
-  appId: "1:771231898402:web:98f9c7dc55304b46e5a37b"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Inicializa o Firebase.

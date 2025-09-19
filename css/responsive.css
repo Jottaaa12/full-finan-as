@@ -17,6 +17,11 @@
     .sidebar.open {
         transform: translateX(0);
     }
+
+    .sidebar-overlay.open {
+        display: block;
+        opacity: 1;
+    }
     .page-content {
         margin-left: 0;
         padding: 1rem;

@@ -190,10 +190,10 @@ export function navigateTo(pageId) {
 
     // Fecha a sidebar automaticamente ao navegar em modo mobile
     const closeMenu = () => {
-        if (sidebar) sidebar.classList.remove('active');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        if (sidebar) sidebar.classList.remove('open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
     };
-    if (sidebar && sidebar.classList.contains('active')) {
+    if (sidebar && sidebar.classList.contains('open')) {
         closeMenu();
     }
 
@@ -213,19 +213,19 @@ function setupMobileMenu() {
     const menuToggle = document.getElementById('menu-toggle');
 
     const openMenu = () => {
-        if (sidebar) sidebar.classList.add('active');
-        if (sidebarOverlay) sidebarOverlay.classList.add('active');
+        if (sidebar) sidebar.classList.add('open');
+        if (sidebarOverlay) sidebarOverlay.classList.add('open');
     };
 
     const closeMenu = () => {
-        if (sidebar) sidebar.classList.remove('active');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        if (sidebar) sidebar.classList.remove('open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
     };
 
     if (menuToggle) {
         menuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (sidebar && sidebar.classList.contains('active')) {
+            if (sidebar && sidebar.classList.contains('open')) {
                 closeMenu();
             } else {
                 openMenu();
