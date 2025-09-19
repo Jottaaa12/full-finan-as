@@ -1,0 +1,23 @@
+{
+  "name": "full-finan-as",
+  "version": "1.0.0",
+  "description": "Transforme suas finanças com o sistema de controle financeiro mais completo e intuitivo da web! Gerencie suas rendas, despesas, cartões de crédito, orçamentos e objetivos em um só lugar, com uma interface moderna e responsiva.",
+  "main": "firebase-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jottaaa12/full-finan-as.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jottaaa12/full-finan-as/issues"
+  },
+  "homepage": "https://github.com/Jottaaa12/full-finan-as#readme",
+  "dependencies": {
+    "vite": "^7.1.6"
+  }
+}
